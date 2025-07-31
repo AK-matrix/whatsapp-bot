@@ -12,13 +12,11 @@ const client = new Client({
             '--disable-accelerated-2d-canvas',
             '--no-first-run',
             '--no-zygote',
-            '--single-process', // helps on some hosts
+            '--single-process',
             '--disable-gpu'
         ]
     }
 });
-
-
 
 client.on('qr', (qr) => {
     qrcode.generate(qr, { small: true });
@@ -29,28 +27,36 @@ client.on('ready', () => {
 });
 
 client.on('message', async msg => {
-    // Handle only commands starting with "!" or "@"
     const text = msg.body.toLowerCase();
 
-    // Personal or group — both allowed
+    // --- !ping ---
     if (text.startsWith('!ping')) {
         await msg.reply('Pong!');
     }
 
+    // --- !help ---
     if (text.startsWith('!help')) {
-        await msg.reply('Commands:\n!ping - Check if bot is online\n@lamians - Tag everyone in group\n!fkniru - FK NIRU');
+        await msg.reply(
+            `Commands:
+!ping - Check if bot is online
+!fkniru - Sends "FK NIRU" 5 times
+@lamians - Tag everyone in group
+!flip - Flip a coin (Heads/Tails)
+!8ball <question> - Magic 8-Ball answer
+!spam <count> <text> - Spam text multiple times (max 5)`
+        );
     }
 
+    // --- !fkniru ---
     if (text.startsWith('!fkniru')) {
-    let reply = '';
-    for (let i = 0; i < 5; i++) {
-        reply += 'FK NIRU\n';
+        let reply = '';
+        for (let i = 0; i < 5; i++) {
+            reply += 'FK NIRU\n';
+        }
+        await msg.reply(reply.trim());
     }
-    await msg.reply(reply.trim());
-}
 
-
-    // @lamians command (GROUP ONLY)
+    // --- @lamians (Tag everyone) ---
     if (text.startsWith('@lamians') && msg.from.includes('@g.us')) {
         const chat = await msg.getChat();
 
@@ -59,18 +65,57 @@ client.on('message', async msg => {
             return;
         }
 
-        // Fetch group participants
-        const participants = chat.participants;
         const mentions = [];
-
         let message = '';
-        for (let participant of participants) {
+
+        for (let participant of chat.participants) {
             mentions.push(participant.id._serialized);
             message += `@${participant.id.user} `;
         }
 
-        // Send message tagging everyone
         await chat.sendMessage(message, { mentions });
+    }
+
+    // --- !flip (Coin flip) ---
+    if (text.startsWith('!flip')) {
+        const result = Math.random() < 0.5 ? 'Heads' : 'Tails';
+        await msg.reply(`Coin flip result: ${result}`);
+    }
+
+    // --- !8ball (Magic 8-Ball) ---
+    if (text.startsWith('!8ball')) {
+        const responses = [
+            'Yes',
+            'No',
+            'Maybe',
+            'Ask again later',
+            'Definitely',
+            'Absolutely not',
+            'Without a doubt',
+            'Unlikely',
+            '100%',
+            'Try again'
+        ];
+        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+        await msg.reply(`🎱 ${randomResponse}`);
+    }
+
+    // --- !spam (Repeats text) ---
+    if (text.startsWith('!spam')) {
+        const parts = msg.body.split(' ');
+        const count = parseInt(parts[1]);
+        const spamText = parts.slice(2).join(' ');
+
+        if (isNaN(count) || count < 1 || count > 5) {
+            await msg.reply('Usage: !spam <count 1-5> <text>');
+            return;
+        }
+
+        let reply = '';
+        for (let i = 0; i < count; i++) {
+            reply += `${spamText}\n`;
+        }
+        await msg.reply(reply.trim());
     }
 });
 
