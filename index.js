@@ -106,16 +106,16 @@ client.on('message', async msg => {
         const count = parseInt(parts[1]);
         const spamText = parts.slice(2).join(' ');
 
-        if (isNaN(count) || count < 1 || count > 5) {
-            await msg.reply('Usage: !spam <count 1-5> <text>');
+        if (isNaN(count) || count < 1 || count > 500) {
+            await msg.reply('Usage: !spam <count 1-500> <text>');
             return;
         }
 
         let reply = '';
         for (let i = 0; i < count; i++) {
-            reply += `${spamText}\n`;
+            await msg.reply(`${spamText}\n`);
         }
-        await msg.reply(reply.trim());
+        
     }
 });
 
