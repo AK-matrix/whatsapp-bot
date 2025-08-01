@@ -3,7 +3,7 @@ const qrcode = require('qrcode-terminal');
 const fs = require('fs');
 
 const ledgerFile = 'ledger.json';
-const developer = '141180390113320@lid';
+const developer = '6585005795@c.us';
 
 // Initialize or load ledger
 let ledger;
@@ -74,7 +74,47 @@ client.on('message', async msg => {
     const text = msg.body.toLowerCase();
     const sender = msg.author || msg.from;
 
-    // HELP
+    // SPLIT with correct credit/debt logic (payer gains credit, others owe)
+    if (text.startsWith('!split')) {
+        const match = msg.body.match(/!split (\d+) (\w+) paid for (.+) \((.+)\)/i);
+        if (!match) {
+            await msg.reply('Usage: !split <amount> <payer> paid for <names> (reason)');
+            return;
+        }
+
+        const amount = parseInt(match[1]);
+        const payer = match[2].toLowerCase();
+        const names = match[3].split(',').map(n => n.trim().toLowerCase());
+        const reason = match[4];
+
+        if (amount > 100 && sender !== developer) {
+            await msg.reply("You're not a developer");
+            return;
+        }
+
+        const perPerson = amount / names.length;
+
+        // Calculate total credit for payer (everyone else’s share)
+        const othersCount = names.filter(n => n !== payer).length;
+        const creditToPayer = perPerson * othersCount;
+
+        // Update payer balance
+        if (ledger.balances[payer] !== undefined) {
+            ledger.balances[payer] += creditToPayer;
+        }
+
+        // Update others balances (each owes their share)
+        names.forEach(name => {
+            if (name !== payer && ledger.balances[name] !== undefined) {
+                ledger.balances[name] -= perPerson;
+            }
+        });
+
+        ledger.logs.push(`Split ${amount} paid by ${payer} for ${names.join(', ')} (${reason})`);
+        saveLedger();
+        await msg.reply(`Split ${amount} paid by ${payer} for ${names.join(', ')} (${reason})`);
+    }
+
     if (text.startsWith('!help')) {
         await msg.reply(
 `Commands:
@@ -160,42 +200,7 @@ client.on('message', async msg => {
         }
     }
 
-    // SPLIT with payer credit logic
-    if (text.startsWith('!split')) {
-        const match = msg.body.match(/!split (\d+) (\w+) paid for (.+) \((.+)\)/i);
-        if (!match) {
-            await msg.reply('Usage: !split <amount> <payer> paid for <names> (reason)');
-            return;
-        }
-
-        const amount = parseInt(match[1]);
-        const payer = match[2].toLowerCase();
-        const names = match[3].split(',').map(n => n.trim().toLowerCase());
-        const reason = match[4];
-
-        if (amount > 100 && sender !== developer) {
-            await msg.reply("You're not a developer");
-            return;
-        }
-
-        const perPerson = amount / names.length;
-
-        // Add credit to payer (they covered total - their share)
-        if (ledger.balances[payer] !== undefined) {
-            ledger.balances[payer] += amount - perPerson;
-        }
-
-        // Subtract owed amounts from others (each owes their share)
-        names.forEach(name => {
-            if (name !== payer && ledger.balances[name] !== undefined) {
-                ledger.balances[name] -= perPerson;
-            }
-        });
-
-        ledger.logs.push(`Split ${amount} paid by ${payer} for ${names.join(', ')} (${reason})`);
-        saveLedger();
-        await msg.reply(`Split ${amount} paid by ${payer} for ${names.join(', ')} (${reason})`);
-    }
+    
     // PAY
     if (text.startsWith('!')) {
         const payMatch = msg.body.match(/!(\w+) pays (\w+) (\d+) \((.+)\)/i);
@@ -281,10 +286,12 @@ client.on('message', async msg => {
             if (parsed) {
                 if (parsed.type === 'split') {
                     const perPerson = parsed.amount / parsed.names.length;
+                    const othersCount = parsed.names.filter(n => n !== parsed.payer).length;
+                    const creditToPayer = perPerson * othersCount;
 
                     // Reverse payer credit
                     if (ledger.balances[parsed.payer] !== undefined) {
-                        ledger.balances[parsed.payer] -= perPerson * (parsed.names.length - 1);
+                        ledger.balances[parsed.payer] -= creditToPayer;
                     }
 
                     // Reverse participant debit
@@ -306,6 +313,7 @@ client.on('message', async msg => {
         saveLedger();
         await msg.reply(`Reverted last ${count} transactions and updated balances.`);
     }
+
 
     // STICKER (developer only)
     if (text.startsWith('!sticker')) {
