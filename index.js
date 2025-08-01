@@ -3,7 +3,7 @@ const qrcode = require('qrcode-terminal');
 const fs = require('fs');
 
 const ledgerFile = 'ledger.json';
-const developer = '6585005795@c.us';
+const developer = '141180390113320@lid';
 
 // Initialize or load ledger
 let ledger;
