@@ -71,6 +71,7 @@ client.on('ready', () => {
 });
 
 client.on('message', async msg => {
+    if(!msg.isGroupMsg) {return;}
     const text = msg.body.toLowerCase();
     const sender = msg.author || msg.from;
 
