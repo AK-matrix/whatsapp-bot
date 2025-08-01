@@ -76,44 +76,67 @@ client.on('message', async msg => {
 
     // SPLIT with correct credit/debt logic (payer gains credit, others owe)
     if (text.startsWith('!split')) {
-        const match = msg.body.match(/!split (\d+) (\w+) paid for (.+) \((.+)\)/i);
-        if (!match) {
-            await msg.reply('Usage: !split <amount> <payer> paid for <names> (reason)');
-            return;
-        }
+  // this regex now:
+  // 1) captures the amount
+  // 2) captures the payer
+  // 3) captures one or more payees (anything up to an optional "(reason)")
+  // 4) optionally captures a reason in parentheses
+  const usage    = 'Usage: !split <amount> <payer> paid for <names> (reason)';
+  const match    = msg.body.match(
+    /^!split\s+(\d+)\s+(\w+)\s+paid\s+for\s+(.+?)(?:\s*\((.+)\))?$/i
+  );
+  if (!match) {
+    await msg.reply(usage);
+    return;
+  }
 
-        const amount = parseInt(match[1]);
-        const payer = match[2].toLowerCase();
-        const names = match[3].split(',').map(n => n.trim().toLowerCase());
-        const reason = match[4];
+  const amount  = parseFloat(match[1]);
+  const payer   = match[2].toLowerCase();
+  const rawList = match[3].trim();
+  const reason  = match[4] || '';
+  
+  // split on comma and/or whitespace, then normalize
+  const names = rawList
+    .split(/[\s,]+/)
+    .map(n => n.trim().toLowerCase())
+    .filter(n => n.length > 0);
+  
+  // include the payer for the divisor
+  const totalPeople = names.length + 1;
+  const perPerson   = amount / totalPeople;
+  
+  // security check
+  if (amount > 100 && sender !== developer) {
+    await msg.reply("You're not a developer");
+    return;
+  }
 
-        if (amount > 100 && sender !== developer) {
-            await msg.reply("You're not a developer");
-            return;
-        }
+  // calculate how much the payer “earns” back
+  const creditToPayer = perPerson * names.length;
 
-        const perPerson = amount / names.length;
+  // ensure balances exist
+  ledger.balances[payer] = ledger.balances[payer] || 0;
+  ledger.balances[payer] += creditToPayer;
 
-        // Calculate total credit for payer (everyone else’s share)
-        const othersCount = names.filter(n => n !== payer).length;
-        const creditToPayer = perPerson * othersCount;
+  // charge each other participant
+  for (let name of names) {
+    ledger.balances[name] = ledger.balances[name] || 0;
+    ledger.balances[name] -= perPerson;
+  }
 
-        // Update payer balance
-        if (ledger.balances[payer] !== undefined) {
-            ledger.balances[payer] += creditToPayer;
-        }
+  ledger.logs.push(
+    `Split ${amount} paid by ${payer} for [${names.join(', ')}]` +
+    (reason ? ` (${reason})` : '')
+  );
+  saveLedger();
 
-        // Update others balances (each owes their share)
-        names.forEach(name => {
-            if (name !== payer && ledger.balances[name] !== undefined) {
-                ledger.balances[name] -= perPerson;
-            }
-        });
+  await msg.reply(
+    `Split ₹${amount} (${names.length + 1} people). ` +
+    `Each owes ₹${perPerson.toFixed(2)}. ` +
+    `${payer} gets back ₹${creditToPayer.toFixed(2)}.`
+  );
+}
 
-        ledger.logs.push(`Split ${amount} paid by ${payer} for ${names.join(', ')} (${reason})`);
-        saveLedger();
-        await msg.reply(`Split ${amount} paid by ${payer} for ${names.join(', ')} (${reason})`);
-    }
 
     if (text.startsWith('!help')) {
         await msg.reply(
