@@ -71,7 +71,7 @@ client.on('ready', () => {
 });
 
 client.on('message', async msg => {
-    if(!msg.isGroupMsg) {return;}
+    if (!msg.from.endsWith('@g.us')) return;
     const text = msg.body.toLowerCase();
     const sender = msg.author || msg.from;
 
