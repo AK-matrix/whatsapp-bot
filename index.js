@@ -4,7 +4,6 @@ const fs = require('fs');
 
 const ledgerFile = 'ledger.json';
 const developer = '141180390113320@lid';
-const fs       = require('fs');
 const BAN_FILE = './banned.json';
 
 // Load (or initialize) your ban list
@@ -258,7 +257,7 @@ client.on('message', async msg => {
             return;
         }
 
-        if (count > 2 && sender !== developer) {
+        if (count > 20 && sender !== developer) {
             await msg.reply("You're not a developer");
             return;
         }
