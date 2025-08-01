@@ -180,12 +180,12 @@ client.on('message', async msg => {
 
         const perPerson = amount / names.length;
 
-        // Add credit to payer
+        // Add credit to payer (they covered total - their share)
         if (ledger.balances[payer] !== undefined) {
-            ledger.balances[payer] += perPerson * (names.length - 1);
+            ledger.balances[payer] += amount - perPerson;
         }
 
-        // Subtract from each participant
+        // Subtract owed amounts from others (each owes their share)
         names.forEach(name => {
             if (name !== payer && ledger.balances[name] !== undefined) {
                 ledger.balances[name] -= perPerson;
@@ -196,7 +196,6 @@ client.on('message', async msg => {
         saveLedger();
         await msg.reply(`Split ${amount} paid by ${payer} for ${names.join(', ')} (${reason})`);
     }
-
     // PAY
     if (text.startsWith('!')) {
         const payMatch = msg.body.match(/!(\w+) pays (\w+) (\d+) \((.+)\)/i);
