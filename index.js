@@ -4,6 +4,7 @@ const fs = require('fs');
 
 const ledgerFile = 'ledger.json';
 const developer = '141180390113320@lid';
+const commandsEnabled = true;
 
 // Initialize or load ledger
 let ledger;
@@ -31,6 +32,7 @@ function saveLedger() {
 }
 
 function parseLog(log) {
+
     if (log.startsWith('Split')) {
         const match = log.match(/Split (\d+) paid by (\w+) for (.+) \((.+)\)/);
         if (match) {
@@ -71,9 +73,24 @@ client.on('ready', () => {
 });
 
 client.on('message', async msg => {
-    if (!msg.from.endsWith('@g.us')) return;
+    if (!msg.from.endsWith('@g.us') || !commandsEnabled) return;
     const text = msg.body.toLowerCase();
     const sender = msg.author || msg.from;
+
+    if (text === '!disable' && sender === developer) {
+    commandsEnabled = false;
+    await msg.reply('⚠️ All commands have been disabled by admin.');
+    return;
+  }
+  if (text === '!enable' && sender === developer) {
+    commandsEnabled = true;
+    await msg.reply('✅ All commands have been re-enabled by admin.');
+    return;
+  }
+  if((text === "!enable" || text === "!disable") && sender !== developer) {
+    await msg.reply('You thought you could control me? Lmaooo');
+    return;
+  }
 
     // SPLIT with correct credit/debt logic (payer gains credit, others owe)
     if (text.startsWith('!split')) {
@@ -309,23 +326,25 @@ client.on('message', async msg => {
             const parsed = parseLog(log);
             if (parsed) {
                 if (parsed.type === 'split') {
-                    const perPerson = parsed.amount / parsed.names.length;
-                    const othersCount = parsed.names.filter(n => n !== parsed.payer).length;
-                    const creditToPayer = perPerson * othersCount;
+                            // match the original divisor:
+                            const totalPeople = parsed.names.length + 1;
+                            const perPerson   = parsed.amount / totalPeople;
+                            // payer had collected everyone else's share:
+                            const creditToPayer = perPerson * parsed.names.length;
 
-                    // Reverse payer credit
-                    if (ledger.balances[parsed.payer] !== undefined) {
-                        ledger.balances[parsed.payer] -= creditToPayer;
-                    }
+                            // Reverse payer credit
+                            if (ledger.balances[parsed.payer] !== undefined) {
+                                ledger.balances[parsed.payer] -= creditToPayer;
+                            }
 
-                    // Reverse participant debit
-                    parsed.names.forEach(name => {
-                        if (name !== parsed.payer && ledger.balances[name] !== undefined) {
-                            ledger.balances[name] += perPerson;
-                        }
-                    });
-
-                } else if (parsed.type === 'pay') {
+                            // Reverse each participant’s debit
+                            parsed.names.forEach(name => {
+                                if (ledger.balances[name] !== undefined) {
+                                ledger.balances[name] += perPerson;
+                                }
+                            });
+                            }
+                else if (parsed.type === 'pay') {
                     if (ledger.balances[parsed.payer] !== undefined && ledger.balances[parsed.receiver] !== undefined) {
                         ledger.balances[parsed.payer] += parsed.amount; // refund payer
                         ledger.balances[parsed.receiver] -= parsed.amount; // remove from receiver
@@ -341,10 +360,6 @@ client.on('message', async msg => {
 
     // STICKER (developer only)
     if (text.startsWith('!sticker')) {
-        if (sender !== developer) {
-            await msg.reply("You're not a developer");
-            return;
-        }
 
         if (msg.hasMedia) {
             const media = await msg.downloadMedia();
