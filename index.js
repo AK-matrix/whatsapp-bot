@@ -116,7 +116,7 @@ client.on('message', async msg => {
 
   // ensure balances exist
   ledger.balances[payer] = ledger.balances[payer] || 0;
-  ledger.balances[payer] += creditToPayer;
+  ledger.balances[payer] += creditToPayer.toFixed(2);
 
   // charge each other participant
   for (let name of names) {
@@ -132,8 +132,8 @@ client.on('message', async msg => {
 
   await msg.reply(
     `Split ₹${amount} (${names.length + 1} people). ` +
-    `Each owes ₹${perPerson.toFixed(2)}. ` +
-    `${payer} gets back ₹${creditToPayer.toFixed(2)}.`
+    `Each owes $${perPerson.toFixed(2)}. ` +
+    `${payer} gets back $${creditToPayer.toFixed(2)}.`
   );
 }
 
