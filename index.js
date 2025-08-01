@@ -4,6 +4,7 @@ const fs = require('fs');
 
 const ledgerFile = 'ledger.json';
 const developer = '141180390113320@lid';
+const ban = '195631616401640@lid'
 var commandsEnabled = true;
 
 // Initialize or load ledger
@@ -75,6 +76,10 @@ client.on('ready', () => {
 client.on('message', async msg => {
     const text = msg.body.toLowerCase();
     const sender = msg.author || msg.from;
+    if (sender === ban) {
+            await msg.reply("JEWSCUMS ARE BANNED");
+            return;
+        }
     if (text.startsWith('!enable')) {
     if (sender !== developer) {
             await msg.reply("You're not a developer");
