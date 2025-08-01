@@ -77,12 +77,20 @@ client.on('message', async msg => {
     const text = msg.body.toLowerCase();
     const sender = msg.author || msg.from;
 
-    if (text === '!disable' && sender === developer) {
+    if (text === '!disable') {
+    if (sender !== developer) {
+            await msg.reply("You're not a developer");
+            return;
+        }
     commandsEnabled = false;
     await msg.reply('⚠️ All commands have been disabled by admin.');
     return;
   }
-  if (text === '!enable' && sender === developer) {
+  if (text === '!enable') {
+    if (sender !== developer) {
+            await msg.reply("You're not a developer");
+            return;
+        }
     commandsEnabled = true;
     await msg.reply('✅ All commands have been re-enabled by admin.');
     return;
@@ -231,12 +239,12 @@ client.on('message', async msg => {
             return;
         }
 
-        if (count > 10 && sender !== developer) {
+        if (count > 2 && sender !== developer) {
             await msg.reply("You're not a developer");
             return;
         }
 
-        for (let i = 0; i < Math.min(count, 50); i++) {
+        for (let i = 0; i < Math.min(count); i++) {
             await msg.reply(spamText);
         }
     }
