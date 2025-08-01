@@ -73,9 +73,18 @@ client.on('ready', () => {
 });
 
 client.on('message', async msg => {
-    if (!msg.from.endsWith('@g.us') || !commandsEnabled) return;
     const text = msg.body.toLowerCase();
     const sender = msg.author || msg.from;
+    if (text.startsWith('!enable')) {
+    if (sender !== developer) {
+            await msg.reply("You're not a developer");
+            return;
+        }
+    commandsEnabled = true;
+    await msg.reply('✅ All commands have been re-enabled by admin.');
+    return;
+  }
+    if (!msg.from.endsWith('@g.us') || !commandsEnabled) return;
     console.log(text, sender);
 
     if (text.startsWith('!disable')) {
@@ -85,15 +94,6 @@ client.on('message', async msg => {
         }
     commandsEnabled = false;
     await msg.reply('⚠️ All commands have been disabled by admin.');
-    return;
-  }
-  if (text.startsWith('!enable')) {
-    if (sender !== developer) {
-            await msg.reply("You're not a developer");
-            return;
-        }
-    commandsEnabled = true;
-    await msg.reply('✅ All commands have been re-enabled by admin.');
     return;
   }
   if((text === "!enable" || text === "!disable") && sender !== developer) {
