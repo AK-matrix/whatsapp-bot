@@ -3,7 +3,7 @@ const qrcode = require('qrcode-terminal');
 const fs = require('fs');
 
 const ledgerFile = 'ledger.json';
-const developer = '6585005795@c.us';
+const developer = '141180390113320@lid';
 
 // Initialize or load ledger
 let ledger;
@@ -73,7 +73,6 @@ client.on('ready', () => {
 client.on('message', async msg => {
     const text = msg.body.toLowerCase();
     const sender = msg.author || msg.from;
-    console.log('Sender ID:', sender);
 
     // HELP
     if (text.startsWith('!help')) {
@@ -106,6 +105,59 @@ client.on('message', async msg => {
 
 !sticker (with image) - Make sticker (developer)`
         );
+    }
+
+    // PING
+    if (text.startsWith('!ping')) {
+        await msg.reply('Pong!');
+    }
+
+    // FKNIRU
+    if (text.startsWith('!fkniru')) {
+        let reply = '';
+        for (let i = 0; i < 5; i++) reply += 'FK NIRU\n';
+        await msg.reply(reply.trim());
+    }
+
+    // TAG ALL (@lamians)
+    if (text.startsWith('@lamians') && msg.from.includes('@g.us')) {
+        const chat = await msg.getChat();
+        const mentions = chat.participants.map(p => p.id._serialized);
+        let message = mentions.map(m => `@${m.split('@')[0]}`).join(' ');
+        await chat.sendMessage(message, { mentions });
+    }
+
+    // FLIP
+    if (text.startsWith('!flip')) {
+        const result = Math.random() < 0.5 ? 'Heads' : 'Tails';
+        await msg.reply(`Coin flip result: ${result}`);
+    }
+
+    // 8BALL
+    if (text.startsWith('!8ball')) {
+        const responses = ['Yes','No','Maybe','Ask later','Definitely','Absolutely not','Without a doubt','Unlikely','100%','Try again'];
+        await msg.reply(`🎱 ${responses[Math.floor(Math.random()*responses.length)]}`);
+    }
+
+    // SPAM
+    if (text.startsWith('!spam')) {
+        const parts = msg.body.split(' ');
+        const count = parseInt(parts[1]);
+        const spamText = parts.slice(2).join(' ');
+
+        if (isNaN(count) || count < 1) {
+            await msg.reply('Usage: !spam <count> <text>');
+            return;
+        }
+
+        if (count > 10 && sender !== developer) {
+            await msg.reply("You're not a developer");
+            return;
+        }
+
+        for (let i = 0; i < Math.min(count, 50); i++) {
+            await msg.reply(spamText);
+        }
     }
 
     // SPLIT with payer credit logic
@@ -143,6 +195,64 @@ client.on('message', async msg => {
         ledger.logs.push(`Split ${amount} paid by ${payer} for ${names.join(', ')} (${reason})`);
         saveLedger();
         await msg.reply(`Split ${amount} paid by ${payer} for ${names.join(', ')} (${reason})`);
+    }
+
+    // PAY
+    if (text.startsWith('!')) {
+        const payMatch = msg.body.match(/!(\w+) pays (\w+) (\d+) \((.+)\)/i);
+        if (payMatch) {
+            const payer = payMatch[1].toLowerCase();
+            const receiver = payMatch[2].toLowerCase();
+            const amount = parseInt(payMatch[3]);
+            const reason = payMatch[4];
+
+            if (amount > 100 && sender !== developer) {
+                await msg.reply("You're not a developer");
+                return;
+            }
+
+            if (ledger.balances[payer] === undefined || ledger.balances[receiver] === undefined) {
+                await msg.reply('Invalid payer or receiver name');
+                return;
+            }
+
+            ledger.balances[payer] -= amount;
+            ledger.balances[receiver] += amount;
+
+            ledger.logs.push(`${payer} paid ${receiver} ${amount} for ${reason}`);
+            saveLedger();
+            await msg.reply(`${payer} paid ${receiver} ${amount} for ${reason}`);
+        }
+    }
+
+    // LOGS
+    if (text.startsWith('!logs')) {
+        if (ledger.logs.length === 0) {
+            await msg.reply('No transactions yet.');
+        } else {
+            await msg.reply('Logs:\n' + ledger.logs.join('\n'));
+        }
+    }
+
+    // BALANCE
+    if (text.startsWith('!balance')) {
+        let reply = 'Balances (positive = credit, negative = owes money):\n\n';
+        for (let m in ledger.balances) {
+            reply += `${m}: ${ledger.balances[m]}\n`;
+        }
+        await msg.reply(reply.trim());
+    }
+
+    // RESET LEDGER (developer only)
+    if (text.startsWith('!resetledger')) {
+        if (sender !== developer) {
+            await msg.reply("You're not a developer");
+            return;
+        }
+        for (let m in ledger.balances) ledger.balances[m] = 0;
+        ledger.logs = [];
+        saveLedger();
+        await msg.reply('Ledger has been reset.');
     }
 
     // REVERT LAST N TRANSACTIONS (developer only)
@@ -198,7 +308,20 @@ client.on('message', async msg => {
         await msg.reply(`Reverted last ${count} transactions and updated balances.`);
     }
 
-    // ... rest of commands unchanged ...
+    // STICKER (developer only)
+    if (text.startsWith('!sticker')) {
+        if (sender !== developer) {
+            await msg.reply("You're not a developer");
+            return;
+        }
+
+        if (msg.hasMedia) {
+            const media = await msg.downloadMedia();
+            await msg.reply(media, undefined, { sendMediaAsSticker: true });
+        } else {
+            await msg.reply('Please send an image with !sticker command.');
+        }
+    }
 });
 
 client.initialize();
