@@ -4,7 +4,7 @@ const fs = require('fs');
 
 const ledgerFile = 'ledger.json';
 const developer = '141180390113320@lid';
-const commandsEnabled = true;
+var commandsEnabled = true;
 
 // Initialize or load ledger
 let ledger;
