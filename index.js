@@ -76,8 +76,9 @@ client.on('message', async msg => {
     if (!msg.from.endsWith('@g.us') || !commandsEnabled) return;
     const text = msg.body.toLowerCase();
     const sender = msg.author || msg.from;
+    console.log(text, sender);
 
-    if (text === '!disable') {
+    if (text.startsWith('!disable')) {
     if (sender !== developer) {
             await msg.reply("You're not a developer");
             return;
@@ -86,7 +87,7 @@ client.on('message', async msg => {
     await msg.reply('⚠️ All commands have been disabled by admin.');
     return;
   }
-  if (text === '!enable') {
+  if (text.startsWith('!enable')) {
     if (sender !== developer) {
             await msg.reply("You're not a developer");
             return;
