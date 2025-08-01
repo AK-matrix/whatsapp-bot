@@ -4,7 +4,21 @@ const fs = require('fs');
 
 const ledgerFile = 'ledger.json';
 const developer = '141180390113320@lid';
-const ban = '195631616401640@lid'
+const fs       = require('fs');
+const BAN_FILE = './banned.json';
+
+// Load (or initialize) your ban list
+let banned = [];
+try {
+  banned = JSON.parse(fs.readFileSync(BAN_FILE, 'utf8'));
+} catch (e) {
+  banned = [];
+}
+
+// Helper to persist
+function saveBanList() {
+  fs.writeFileSync(BAN_FILE, JSON.stringify(banned, null, 2));
+}
 var commandsEnabled = true;
 
 // Initialize or load ledger
@@ -76,7 +90,7 @@ client.on('ready', () => {
 client.on('message', async msg => {
     const text = msg.body.toLowerCase();
     const sender = msg.author || msg.from;
-    if (sender === ban) {
+    if (banned.includes(sender)) {
             await msg.reply("JEWSCUMS ARE BANNED");
             return;
         }
@@ -90,7 +104,6 @@ client.on('message', async msg => {
     return;
   }
     if (!msg.from.endsWith('@g.us') || !commandsEnabled) return;
-    console.log(text, sender);
 
     if (text.startsWith('!disable')) {
     if (sender !== developer) {
@@ -370,6 +383,59 @@ client.on('message', async msg => {
         saveLedger();
         await msg.reply(`Reverted last ${count} transactions and updated balances.`);
     }
+
+     if (text.startsWith('!ban ')) {
+    if (sender !== developer) {
+      await msg.reply("⚠️ You don't have permission to ban users.");
+      return;
+    }
+
+    // Expecting "!ban @username"
+    const match = text.match(/^!ban\s+@(\w+)$/);
+    if (!match) {
+      await msg.reply('Usage: !ban @<shortId>');
+      return;
+    }
+
+    // Reconstruct full JID: <shortId>@lid
+    const shortId = match[1];
+    const fullId  = `${shortId}@lid`;
+
+    if (banned.includes(fullId)) {
+      await msg.reply(`${fullId} is already banned.`);
+      return;
+    }
+
+    banned.push(fullId);
+    saveBanList();
+    await msg.reply(`🚫 Banned ${fullId}`);
+    return;
+  }
+
+  // 2) (Optional) Admin-only !unban
+  if (text.startsWith('!unban ')) {
+    if (sender !== developer) {
+      await msg.reply("⚠️ You don't have permission to unban users.");
+      return;
+    }
+    const match = text.match(/^!unban\s+@(\w+)$/);
+    if (!match) {
+      await msg.reply('Usage: !unban @<shortId>');
+      return;
+    }
+    const shortId = match[1];
+    const fullId  = `${shortId}@lid`;
+    const idx     = banned.indexOf(fullId);
+    if (idx === -1) {
+      await msg.reply(`${fullId} is not banned.`);
+      return;
+    }
+    banned.splice(idx, 1);
+    saveBanList();
+    await msg.reply(`✅ Unbanned ${fullId}`);
+    return;
+  }
+
 
 
     // STICKER (developer only)
