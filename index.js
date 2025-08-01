@@ -196,7 +196,7 @@ client.on('message', async msg => {
 
 !8ball <q> - Magic 8-Ball
 
-!spam <count> <text> - Spam text (10+ only developer)
+!spam <count> <text> - Spam text (50+ only developer)
 
 !split <amt> <payer> paid for <names> (reason) - Split money with payer credit
 
@@ -206,11 +206,11 @@ client.on('message', async msg => {
 
 !balance - Show balances
 
-!resetledger - Reset balances and logs (developer)
+!sticker (with image) - Make sticker
 
-!revert <n> - Revert last n transactions (developer)
+**Developer commands are hidden**`
 
-!sticker (with image) - Make sticker (developer)`
+
         );
     }
 
@@ -257,7 +257,7 @@ client.on('message', async msg => {
             return;
         }
 
-        if (count > 20 && sender !== developer) {
+        if (count > 50 && sender !== developer) {
             await msg.reply("You're not a developer");
             return;
         }
@@ -368,7 +368,7 @@ client.on('message', async msg => {
                                 if (ledger.balances[name] !== undefined) {
                                 ledger.balances[name] += perPerson;
                                 }
-                            });
+                            }); 
                             }
                 else if (parsed.type === 'pay') {
                     if (ledger.balances[parsed.payer] !== undefined && ledger.balances[parsed.receiver] !== undefined) {
@@ -401,13 +401,13 @@ client.on('message', async msg => {
     const fullId  = `${shortId}@lid`;
 
     if (banned.includes(fullId)) {
-      await msg.reply(`${fullId} is already banned.`);
+      await msg.reply(`That jewscum is already banned.`);
       return;
     }
 
     banned.push(fullId);
     saveBanList();
-    await msg.reply(`🚫 Banned ${fullId}`);
+    await msg.reply(`🚫 Banned that jewscum`);
     return;
   }
 
@@ -426,12 +426,12 @@ client.on('message', async msg => {
     const fullId  = `${shortId}@lid`;
     const idx     = banned.indexOf(fullId);
     if (idx === -1) {
-      await msg.reply(`${fullId} is not banned.`);
+      await msg.reply(`He is not banned.`);
       return;
     }
     banned.splice(idx, 1);
     saveBanList();
-    await msg.reply(`✅ Unbanned ${fullId}`);
+    await msg.reply(`✅ Unbanned him`);
     return;
   }
 
