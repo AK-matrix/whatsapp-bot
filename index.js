@@ -1,16 +1,9 @@
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const fs = require('fs');
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
-const axios = require('axios');
-const https = require('https');
+const { execSync } = require('child_process');
 const key   = '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';  
 
-const insecureAgent = new https.Agent({
-  rejectUnauthorized: false,
-  keepAlive: true
-});
 
 const ledgerFile = 'ledger.json';
 const developer = '141180390113320@lid';
@@ -234,41 +227,41 @@ client.on('message', async msg => {
 
   const chat = await msg.getChat();
   try {
-    const resp = await axios.post(
-      'https://api.grok.ai/v1/chat/completions',
-      {
-        model: 'grok-3.5',
-        messages: [
-          {
-            role:    'system',
-            content: 
-              'You are AK, a bot serving only the SLM WhatsApp group. ' +
-              'You are the best bot and always keep your messages concise.'
-          },
-          { role: 'user', content: question }
-        ],
-        max_tokens: 300,
-        temperature: 0.7
-      },
-      {
-        httpsAgent: insecureAgent,
-        headers: {
-          'Authorization': `Bearer ${key}`,
-          'Content-Type':  'application/json',
-          'Host':          'api.grok.ai'
+    // 1) build the JSON payload
+    const payload = JSON.stringify({
+      model: 'grok-3.5',
+      messages: [
+        {
+          role:    'system',
+          content:
+            'You are AK, serving only the SLM WhatsApp group. ' +
+            'You are the best bot and always keep your messages concise.'
         },
-        // make sure Axios doesn’t override our TLS settings
-        transitional: { clarifyTimeoutError: true }
-      }
-    );
+        { role: 'user', content: question }
+      ],
+      max_tokens: 300,
+      temperature: 0.7
+    });
 
-    const answer = resp.data.choices?.[0]?.message?.content?.trim()
+    // 2) shell out to curl, -k skips all TLS checks
+    const cmd = [
+      'curl -k -s -X POST "https://api.grok.ai/v1/chat/completions"',
+      `-H "Host: api.grok.ai"`,
+      `-H "Authorization: Bearer ${key}"`,
+      `-H "Content-Type: application/json"`,
+      `--data '${payload.replace(/'/g, `'\\''`)}'`
+    ].join(' ');
+
+    const stdout = execSync(cmd, { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 });
+    const res    = JSON.parse(stdout);
+
+    const answer = res.choices?.[0]?.message?.content?.trim()
       || 'Fk arun';
     await chat.sendMessage(answer);
 
   } catch (err) {
-    console.error('Grok API error:', err);
-    await msg.reply('Fk arun');
+    console.error('Grok via curl error:', err);
+    await msg.reply('Fk arun and nirubai');
   }
 }
     // FKNIRU
