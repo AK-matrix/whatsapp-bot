@@ -4,15 +4,22 @@ const fs = require('fs');
 
 const fetch = require('node-fetch');
 const https = require('https');
+const tls   = require('tls');
 const key   = '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';  
 
 const agent = new https.Agent({
-  servername:       'api.grok.ai',      // force correct SNI
-  minVersion:       'TLSv1.2',          // disallow old TLSv1.0/1.1
-  maxVersion:       'TLSv1.3',
-  ALPNProtocols:    ['http/1.1'],       // force HTTP/1.1
-  rejectUnauthorized: true,              // verify the cert
-  // you can add `ciphers` here if you need to lock down to modern suites
+  keepAlive: true,
+  rejectUnauthorized: true,
+  ALPNProtocols: ['http/1.1'],
+  createConnection: (opts, callback) => {
+    return tls.connect({
+      host:             opts.host,
+      port:             opts.port,
+      servername:       'api.grok.ai',    // exact SNI host
+      rejectUnauthorized: opts.rejectUnauthorized,
+      ALPNProtocols:    ['http/1.1']
+    }, callback);
+  }
 });
 
 const ledgerFile = 'ledger.json';
