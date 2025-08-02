@@ -278,24 +278,32 @@ client.on('message', async msg => {
 
   // 2) turn each @shortId into a real Contact
   //    and build the “pingable” text using their numeric phone number
-  const contacts = [];
-  let actualText = spamText;
-  for (let short of shorts) {
-    const jid     = `${short}@jid`;            // full JID
-    const contact = await client.getContactById(jid);
-    contacts.push(contact);
+  // … after you’ve extracted your @short handles into `shorts[]` …
 
-    // replace @short with @theirNumber (so WhatsApp highlights it)
-    actualText = actualText.replace(
-      new RegExp(`@${short}`, 'g'),
-      '@' + contact.number
-    );
-  }
+// 1) Turn each handle into a real JID and fetch the Contact
+const contacts = [];
+let actualText = spamText;
+for (let short of shorts) {
+  // build a valid JID; whatsapp-web.js needs @c.us
+  const jid = `${short}@c.us`;
 
-  // 3) send it count times, passing the mentions array
-  for (let i = 0; i < count; i++) {
-    await chat.sendMessage(actualText, { mentions: contacts });
-  }
+  // fetch the Contact
+  const contact = await client.getContactById(jid);
+  contacts.push(contact);
+
+  // contact.id.user is the pure phone number string
+  // replace "@short" with "@<phoneNumber>" in your text
+  actualText = actualText.replace(
+    new RegExp(`@${short}`, 'g'),
+    '@' + contact.id.user
+  );
+}
+
+// 2) Now blast it out, passing the mentions array
+for (let i = 0; i < count; i++) {
+  await chat.sendMessage(actualText, { mentions: contacts });
+}
+
 }
 
 
