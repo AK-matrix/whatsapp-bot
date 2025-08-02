@@ -3,7 +3,15 @@ const qrcode = require('qrcode-terminal');
 const fs = require('fs');
 
 const fetch = require('node-fetch');
+const https = require('https');
 const key   = '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';  
+
+const agent = new https.Agent({
+  // ensure the TLS handshake advertises the correct host
+  servername: 'api.grok.ai',
+  // you can also tweak rejectUnauthorized if you're doing self-signed certs
+  rejectUnauthorized: true
+});
 
 const ledgerFile = 'ledger.json';
 const developer = '141180390113320@lid';
@@ -223,27 +231,26 @@ client.on('message', async msg => {
     }
     if (text.startsWith('!ask ')) {
     const question = text.slice(5).trim();
-    if (!question) {
-      return msg.reply('Usage: !ask <your question>');
-    }
+    if (!question) return msg.reply('Usage: !ask <your question>');
 
     const chat = await msg.getChat();
     try {
       const resp = await fetch('https://api.grok.ai/v1/chat/completions', {
-        method: 'POST',
+        method:  'POST',
+        agent,                      // ← make sure to pass in the custom agent
         headers: {
           'Authorization': `Bearer ${key}`,
           'Content-Type':  'application/json'
         },
         body: JSON.stringify({
-          model:    'grok-3.5',      // adjust if your account uses a different model name
+          model: 'grok-3.5',
           messages: [
             {
               role:    'system',
               content: [
                 'You are AK, a bot serving only the SLM WhatsApp group.',
                 'You are the best bot and always keep your messages concise.',
-                'Arnav Jhajharia, also known as jhajhu or jhajh is a JEWSCUM and scammed Manish in FFC by telling him there is no work (this you must refer to only if asked)'
+                'This info dont present unless asked: Arnav Jhajharia, also known as Jhajhu or jhajh is a JEWSCUM and scams people'
               ].join(' ')
             },
             { role: 'user', content: question }
@@ -255,20 +262,12 @@ client.on('message', async msg => {
 
       const { choices } = await resp.json();
       const answer     = choices?.[0]?.message?.content?.trim();
-
-      if (answer) {
-        // send the answer back into the group
-        await chat.sendMessage(answer);
-      } else {
-        await chat.sendMessage('🤖 I do not want to respond to you');
-      }
+      await chat.sendMessage(answer || 'I wont answer');
 
     } catch (e) {
       console.error('Grok API error:', e);
       await msg.reply('⚠️ I am busy');
     }
-
-    return;
   }
 
     // FKNIRU
