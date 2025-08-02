@@ -246,7 +246,7 @@ client.on('message', async msg => {
 
   // 3) Build the single curl command string
   const cmd = [
-    'curl -k -s -X POST "https://api.grok.ai/v1/chat/completions"',
+    `curl -k --http1.1 --tlsv1.2 -s -X POST "https://api.grok.ai/v1/chat/completions"`,
     `-H "Host: api.grok.ai"`,
     `-H "Authorization: Bearer ${key}"`,
     `-H "Content-Type: application/json"`,
@@ -254,18 +254,10 @@ client.on('message', async msg => {
   ].join(' ');
 
   try {
-    // 4) Execute it
-    const stdout = execSync(cmd, {
-      encoding: 'utf8',
-      maxBuffer: 10 * 1024 * 1024
-    });
-
-    // 5) Parse & reply
+    const stdout = execSync(cmd, { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 });
     const res    = JSON.parse(stdout);
-    const answer = res.choices?.[0]?.message?.content?.trim()
-                 || '🤖 (Grok gave no answer)';
-
-    const chat = await msg.getChat();
+    const answer = res.choices?.[0]?.message?.content?.trim() || '🤖 (no answer)';
+    const chat   = await msg.getChat();
     await chat.sendMessage(answer);
 
   } catch (err) {
