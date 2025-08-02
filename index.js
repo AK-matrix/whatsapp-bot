@@ -271,21 +271,14 @@ client.on('message', async msg => {
   }
 
   // 2) For each spam, include the mentions metadata
+  const contacts = await Promise.all(
+    mentionIds.map(id => client.getContactById(id))
+  );
+
+  // 2. Send spam with the mentions array
+  const chat = await msg.getChat();
   for (let i = 0; i < count; i++) {
-    if (mentionIds.length) {
-      // Baileys-style contextInfo
-      // inside your !spam handler
-      const chat = await msg.getChat();
-      await chat.sendMessage(spamText, {
-  mentions: mentionIds.map(id => client.getContactById(id))
-});
-
-
-    } else {
-      // no mentions to pass
-      const chat = await msg.getChat();
-      await chat.sendMessage(spamText);
-    }
+    await chat.sendMessage(spamText, { mentions: contacts });
   }
 }
 
