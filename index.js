@@ -223,23 +223,46 @@ client.on('message', async msg => {
     }
     if (text.startsWith('!ask')) {
   const question = text.slice(5).trim();
-  if (!question) return msg.reply('Usage: !ask <your question>');
+  if (!question) {
+    return msg.reply('Usage: !ask <your question>');
+  }
 
-  const chat = await msg.getChat();
+  // 2) Build the JSON payload _before_ the try/catch
+  const payload = JSON.stringify({
+    model: 'grok-3.5',
+    messages: [
+      {
+        role:    'system',
+        content: [
+          'You are AK, exclusively for the SLM WhatsApp group.',
+          'You are the best bot and keep replies short.'
+        ].join(' ')
+      },
+      { role: 'user', content: question }
+    ],
+    max_tokens: 300,
+    temperature: 0.7
+  });
+
+  // 3) Build the single curl command string
+  const cmd = [
+    'curl -k -s -X POST "https://api.grok.ai/v1/chat/completions"',
+    `-H "Host: api.grok.ai"`,
+    `-H "Authorization: Bearer ${key}"`,
+    `-H "Content-Type: application/json"`,
+    `--data '${payload.replace(/'/g, `'\\''`)}'`
+  ].join(' ');
+
   try {
-    // Build a single shell command—NO semicolons between flags!
-    const cmd = [
-      'curl -k -s -X POST "https://api.grok.ai/v1/chat/completions"',
-      `-H "Host: api.grok.ai"`,
-      `-H "Authorization: Bearer ${key}"`,
-      `-H "Content-Type: application/json"`,
-      `--data '${payload.replace(/'/g, `'\\''`)}'`
-    ].join(' ');
+    // 4) Execute it
+    const stdout = execSync(cmd, {
+      encoding: 'utf8',
+      maxBuffer: 10 * 1024 * 1024
+    });
 
-    // Run it
-    const stdout = execSync(cmd, { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 });
+    // 5) Parse & reply
     const res    = JSON.parse(stdout);
-    const answer = res.choices?.[0]?.message?.content?.trim() 
+    const answer = res.choices?.[0]?.message?.content?.trim()
                  || '🤖 (Grok gave no answer)';
 
     const chat = await msg.getChat();
@@ -247,7 +270,7 @@ client.on('message', async msg => {
 
   } catch (err) {
     console.error('Grok via curl error:', err);
-    await msg.reply('ban arun and birubai');
+    await msg.reply('ban biru');
   }
 }
     // FKNIRU
