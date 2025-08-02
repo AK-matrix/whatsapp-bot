@@ -274,11 +274,17 @@ client.on('message', async msg => {
   for (let i = 0; i < count; i++) {
     if (mentionIds.length) {
       // Baileys-style contextInfo
-      await msg.reply(spamText, { mentions: mentionIds });
+      // inside your !spam handler
+      const chat = await msg.getChat();
+      await chat.sendMessage(spamText, {
+  mentions: mentionIds.map(id => client.getContactById(id))
+});
+
 
     } else {
       // no mentions to pass
-      await msg.reply(spamText);
+      const chat = await msg.getChat();
+      await chat.sendMessage(spamText);
     }
   }
 }
