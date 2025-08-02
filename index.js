@@ -227,23 +227,7 @@ client.on('message', async msg => {
 
   const chat = await msg.getChat();
   try {
-    // 1) build the JSON payload
-    const payload = JSON.stringify({
-      model: 'grok-3.5',
-      messages: [
-        {
-          role:    'system',
-          content:
-            'You are AK, serving only the SLM WhatsApp group. ' +
-            'You are the best bot and always keep your messages concise.'
-        },
-        { role: 'user', content: question }
-      ],
-      max_tokens: 300,
-      temperature: 0.7
-    });
-
-    // 2) shell out to curl, -k skips all TLS checks
+    // Build a single shell command—NO semicolons between flags!
     const cmd = [
       'curl -k -s -X POST "https://api.grok.ai/v1/chat/completions"',
       `-H "Host: api.grok.ai"`,
@@ -252,16 +236,18 @@ client.on('message', async msg => {
       `--data '${payload.replace(/'/g, `'\\''`)}'`
     ].join(' ');
 
+    // Run it
     const stdout = execSync(cmd, { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 });
     const res    = JSON.parse(stdout);
+    const answer = res.choices?.[0]?.message?.content?.trim() 
+                 || '🤖 (Grok gave no answer)';
 
-    const answer = res.choices?.[0]?.message?.content?.trim()
-      || 'Fk arun';
+    const chat = await msg.getChat();
     await chat.sendMessage(answer);
 
   } catch (err) {
     console.error('Grok via curl error:', err);
-    await msg.reply('Fk arun and nirubai');
+    await msg.reply('ban arun and birubai');
   }
 }
     // FKNIRU
