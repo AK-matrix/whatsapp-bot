@@ -248,24 +248,40 @@ client.on('message', async msg => {
 
     // SPAM
     if (text.startsWith('!spam')) {
-        const parts = msg.body.split(' ');
-        const count = parseInt(parts[1]);
-        const spamText = parts.slice(2).join(' ');
+  const parts   = msg.body.split(' ');
+  const count   = parseInt(parts[1]);
+  const spamText= parts.slice(2).join(' ');
 
-        if (isNaN(count) || count < 1) {
-            await msg.reply('Usage: !spam <count> <text>');
-            return;
-        }
+  if (isNaN(count) || count < 1) {
+    await msg.reply('Usage: !spam <count> <text>');
+    return;
+  }
+  if (count > 50 && sender !== developer) {
+    await msg.reply("You're not a developer");
+    return;
+  }
 
-        if (count > 50 && sender !== developer) {
-            await msg.reply("You're not a developer");
-            return;
-        }
+  // 1) extract every @shortId in the spamText
+  const mentionRegex = /@(\w+)/g;
+  const mentionIds   = [];
+  let m;
+  while ((m = mentionRegex.exec(spamText)) !== null) {
+    // reconstruct full JID (adjust domain if you need '@lid' instead)
+    mentionIds.push(`${m[1]}@lid`);
+  }
 
-        for (let i = 0; i < Math.min(count); i++) {
-            await msg.reply(spamText);
-        }
+  // 2) For each spam, include the mentions metadata
+  for (let i = 0; i < count; i++) {
+    if (mentionIds.length) {
+      // Baileys-style contextInfo
+      await msg.reply(spamText, { mentions: mentionIds });
+
+    } else {
+      // no mentions to pass
+      await msg.reply(spamText);
     }
+  }
+}
 
     
     // PAY
