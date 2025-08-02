@@ -6,12 +6,17 @@ const fetch = require('node-fetch');
 const https = require('https');
 const key   = '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';  
 
-const agent = new https.Agent({
-  // ensure the TLS handshake advertises the correct host
-  servername: 'api.grok.ai',
-  // you can also tweak rejectUnauthorized if you're doing self-signed certs
-  rejectUnauthorized: true
-});
+const agent = parsedUrl => {
+  if (parsedUrl.protocol === 'https:') {
+    return new https.Agent({
+      servername:    parsedUrl.hostname,       // ensures correct SNI
+      ALPNProtocols: ['http/1.1'],             // force HTTP/1.1
+      rejectUnauthorized: true
+    });
+  }
+  // fallback for http (if you ever use it)
+  return new https.Agent();
+};
 
 const ledgerFile = 'ledger.json';
 const developer = '141180390113320@lid';
@@ -229,8 +234,8 @@ client.on('message', async msg => {
     if (text.startsWith('!ping')) {
         await msg.reply('Pong!');
     }
-    if (text.startsWith('!ask ')) {
-    const question = text.slice(5).trim();
+    if (text.startsWith('!ask')) {
+    const question = text.trim().slice(5).trim();
     if (!question) return msg.reply('Usage: !ask <your question>');
 
     const chat = await msg.getChat();
