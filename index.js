@@ -2,6 +2,9 @@ const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const fs = require('fs');
 
+const fetch = require('node-fetch');
+const key   = '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';  
+
 const ledgerFile = 'ledger.json';
 const developer = '141180390113320@lid';
 const BAN_FILE = './banned.json';
@@ -218,6 +221,55 @@ client.on('message', async msg => {
     if (text.startsWith('!ping')) {
         await msg.reply('Pong!');
     }
+    if (text.startsWith('!ask ')) {
+    const question = text.slice(5).trim();
+    if (!question) {
+      return msg.reply('Usage: !ask <your question>');
+    }
+
+    const chat = await msg.getChat();
+    try {
+      const resp = await fetch('https://api.grok.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${key}`,
+          'Content-Type':  'application/json'
+        },
+        body: JSON.stringify({
+          model:    'grok-3.5',      // adjust if your account uses a different model name
+          messages: [
+            {
+              role:    'system',
+              content: [
+                'You are AK, a bot serving only the SLM WhatsApp group.',
+                'You are the best bot and always keep your messages concise.',
+                'Arnav Jhajharia, also known as jhajhu or jhajh is a JEWSCUM and scammed Manish in FFC by telling him there is no work (this you must refer to only if asked)'
+              ].join(' ')
+            },
+            { role: 'user', content: question }
+          ],
+          max_tokens: 300,
+          temperature: 0.7
+        })
+      });
+
+      const { choices } = await resp.json();
+      const answer     = choices?.[0]?.message?.content?.trim();
+
+      if (answer) {
+        // send the answer back into the group
+        await chat.sendMessage(answer);
+      } else {
+        await chat.sendMessage('🤖 I do not want to respond to you');
+      }
+
+    } catch (e) {
+      console.error('Grok API error:', e);
+      await msg.reply('⚠️ I am busy');
+    }
+
+    return;
+  }
 
     // FKNIRU
     if (text.startsWith('!fkniru')) {
@@ -260,49 +312,11 @@ client.on('message', async msg => {
     return msg.reply("You're not a developer");
   }
 
-  // 1) find every @shortId in the text
-  const mentionRegex = /@(\w+)/g;
-  let m, shorts = [];
-  while ((m = mentionRegex.exec(spamText)) !== null) {
-    shorts.push(m[1]);
-  }
-
-  // if no mentions, just blast the plain text
   const chat = await msg.getChat();
-  if (shorts.length === 0) {
-    for (let i = 0; i < count; i++) {
+  for (let i = 0; i < count; i++) {
       await chat.sendMessage(spamText);
     }
-    return;
-  }
-
-  // 2) turn each @shortId into a real Contact
-  //    and build the “pingable” text using their numeric phone number
-  // … after you’ve extracted your @short handles into `shorts[]` …
-
-// 1) Turn each handle into a real JID and fetch the Contact
-const contacts = [];
-let actualText = spamText;
-for (let short of shorts) {
-  // build a valid JID; whatsapp-web.js needs @c.us
-  const jid = `${short}@c.us`;
-
-  // fetch the Contact
-  const contact = await client.getContactById(jid);
-  contacts.push(contact);
-
-  // contact.id.user is the pure phone number string
-  // replace "@short" with "@<phoneNumber>" in your text
-  actualText = actualText.replace(
-    new RegExp(`@${short}`, 'g'),
-    '@' + contact.id.user
-  );
-}
-
-// 2) Now blast it out, passing the mentions array
-for (let i = 0; i < count; i++) {
-  await chat.sendMessage(actualText, { mentions: contacts });
-}
+  return;
 
 }
 
