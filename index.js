@@ -1,16 +1,15 @@
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const fs = require('fs');
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 const axios = require('axios');
 const https = require('https');
 const key   = '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';  
 
-const agent = new https.Agent({
-  servername:       'api.grok.ai',    // exact host for SNI
-  minVersion:       'TLSv1.2',
-  maxVersion:       'TLSv1.3',
-  rejectUnauthorized: true
+const insecureAgent = new https.Agent({
+  rejectUnauthorized: false,
+  keepAlive: true
 });
 
 const ledgerFile = 'ledger.json';
@@ -229,7 +228,7 @@ client.on('message', async msg => {
     if (text.startsWith('!ping')) {
         await msg.reply('Pong!');
     }
-    if (!text.startsWith('!ask ')) {
+    if (text.startsWith('!ask')) {
   const question = text.slice(5).trim();
   if (!question) return msg.reply('Usage: !ask <your question>');
 
@@ -241,8 +240,8 @@ client.on('message', async msg => {
         model: 'grok-3.5',
         messages: [
           {
-            role: 'system',
-            content:
+            role:    'system',
+            content: 
               'You are AK, a bot serving only the SLM WhatsApp group. ' +
               'You are the best bot and always keep your messages concise.'
           },
@@ -252,17 +251,19 @@ client.on('message', async msg => {
         temperature: 0.7
       },
       {
-        httpsAgent: agent,
+        httpsAgent: insecureAgent,
         headers: {
           'Authorization': `Bearer ${key}`,
           'Content-Type':  'application/json',
           'Host':          'api.grok.ai'
-        }
+        },
+        // make sure Axios doesn’t override our TLS settings
+        transitional: { clarifyTimeoutError: true }
       }
     );
 
     const answer = resp.data.choices?.[0]?.message?.content?.trim()
-      || 'Cannot respond';
+      || 'Fk arun';
     await chat.sendMessage(answer);
 
   } catch (err) {
