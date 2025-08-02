@@ -2,24 +2,15 @@ const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const fs = require('fs');
 
-const fetch = require('node-fetch');
+const axios = require('axios');
 const https = require('https');
-const tls   = require('tls');
 const key   = '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';  
 
 const agent = new https.Agent({
-  keepAlive: true,
-  rejectUnauthorized: true,
-  ALPNProtocols: ['http/1.1'],
-  createConnection: (opts, callback) => {
-    return tls.connect({
-      host:             opts.host,
-      port:             opts.port,
-      servername:       'api.grok.ai',    // exact SNI host
-      rejectUnauthorized: opts.rejectUnauthorized,
-      ALPNProtocols:    ['http/1.1']
-    }, callback);
-  }
+  servername:       'api.grok.ai',    // exact host for SNI
+  minVersion:       'TLSv1.2',
+  maxVersion:       'TLSv1.3',
+  rejectUnauthorized: true
 });
 
 const ledgerFile = 'ledger.json';
@@ -238,52 +229,47 @@ client.on('message', async msg => {
     if (text.startsWith('!ping')) {
         await msg.reply('Pong!');
     }
-    if (text.startsWith('!ask ')) {
-    const question = text.slice(5).trim();
-    if (!question) {
-      return msg.reply('Usage: !ask <your question>');
-    }
+    if (!text.startsWith('!ask ')) {
+  const question = text.slice(5).trim();
+  if (!question) return msg.reply('Usage: !ask <your question>');
 
-    const chat = await msg.getChat();
-    try {
-      const res = await fetch('https://api.grok.ai/v1/chat/completions', {
-        method: 'POST',
-        agent,     // ← pass our custom agent
+  const chat = await msg.getChat();
+  try {
+    const resp = await axios.post(
+      'https://api.grok.ai/v1/chat/completions',
+      {
+        model: 'grok-3.5',
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You are AK, a bot serving only the SLM WhatsApp group. ' +
+              'You are the best bot and always keep your messages concise.'
+          },
+          { role: 'user', content: question }
+        ],
+        max_tokens: 300,
+        temperature: 0.7
+      },
+      {
+        httpsAgent: agent,
         headers: {
-          'Host':          'api.grok.ai',             // explicit Host header
           'Authorization': `Bearer ${key}`,
           'Content-Type':  'application/json',
-          'User-Agent':    'node-fetch/2.x',          // mimic a modern UA
-        },
-        body: JSON.stringify({
-          model: 'grok-3.5',
-          messages: [
-            {
-              role: 'system',
-              content:
-                'You are AK, a bot serving only the SLM WhatsApp group. ' +
-                'You are the best bot and always keep your messages concise.'
-            },
-            { role: 'user', content: question }
-          ],
-          max_tokens: 300,
-          temperature: 0.7
-        }),
-      });
-
-      if (!res.ok) {
-        throw new Error(`Grok returned ${res.status}`);
+          'Host':          'api.grok.ai'
+        }
       }
+    );
 
-      const { choices } = await res.json();
-      const answer = choices?.[0]?.message?.content?.trim();
-      await chat.sendMessage(answer || 'Not answering you');
+    const answer = resp.data.choices?.[0]?.message?.content?.trim()
+      || 'Cannot respond';
+    await chat.sendMessage(answer);
 
-    } catch (err) {
-      console.error('Grok API error:', err);
-      await msg.reply('⚠️ Busy rn');
-    }
+  } catch (err) {
+    console.error('Grok API error:', err);
+    await msg.reply('Fk arun');
   }
+}
     // FKNIRU
     if (text.startsWith('!fkniru')) {
         let reply = '';
