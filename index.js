@@ -281,7 +281,7 @@ client.on('message', async msg => {
   const contacts = [];
   let actualText = spamText;
   for (let short of shorts) {
-    const jid     = `${short}@c.us`;            // full JID
+    const jid     = `${short}@jid`;            // full JID
     const contact = await client.getContactById(jid);
     contacts.push(contact);
 
