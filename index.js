@@ -248,39 +248,62 @@ client.on('message', async msg => {
 
     // SPAM
     if (text.startsWith('!spam')) {
-  const parts   = msg.body.split(' ');
-  const count   = parseInt(parts[1]);
-  const spamText= parts.slice(2).join(' ');
+  const parts    = msg.body.split(' ');
+  const count    = parseInt(parts[1]);
+  const spamText = parts.slice(2).join(' ');
 
   if (isNaN(count) || count < 1) {
-    await msg.reply('Usage: !spam <count> <text>');
-    return;
+    return msg.reply('Usage: !spam <count> <text>');
   }
   if (count > 50 && sender !== developer) {
-    await msg.reply("You're not a developer");
+    return msg.reply("You're not a developer");
+  }
+
+  // 1) find every @shortId in the text
+  const mentionRegex = /@(\w+)/g;
+  let m, shorts = [];
+  while ((m = mentionRegex.exec(spamText)) !== null) {
+    shorts.push(m[1]);
+  }
+  if (shorts.length === 0) {
+    // no mentions, just spam plain text
+    const chat = await msg.getChat();
+    for (let i = 0; i < count; i++) {
+      await chat.sendMessage(spamText);
+    }
     return;
   }
 
-  // 1) extract every @shortId in the spamText
-  const mentionRegex = /@(\w+)/g;
-  const mentionIds   = [];
-  let m;
-  while ((m = mentionRegex.exec(spamText)) !== null) {
-    // reconstruct full JID (adjust domain if you need '@lid' instead)
-    mentionIds.push(`${m[1]}@lid`);
-  }
+  // 2) build full JIDs and fetch Contacts
+  const fullJids = shorts.map(s => `${s}@c.us`);
 
-  // 2) For each spam, include the mentions metadata
+  // fetch contacts in parallel
   const contacts = await Promise.all(
-    mentionIds.map(id => client.getContactById(id))
+    fullJids.map(jid => client.getContactById(jid))
   );
 
-  // 2. Send spam with the mentions array
+  // 3) rewrite your text so it literally contains @<number>
+  //    e.g. "@1234567890" instead of "@shortId"
+  let actualText = spamText;
+  for (let contact of contacts) {
+    // .id.user is the pure number string
+    const num = contact.id.user;
+    // find the shortId that produced this jid
+    const short = contact.id._serialized.split('@')[0];
+    // replace ALL occurrences of @short with @<number>
+    actualText = actualText.replace(
+      new RegExp(`@${short}`, 'g'),
+      '@' + num
+    );
+  }
+
+  // 4) send it
   const chat = await msg.getChat();
   for (let i = 0; i < count; i++) {
-    await chat.sendMessage(spamText, { mentions: contacts });
+    await chat.sendMessage(actualText, { mentions: contacts });
   }
 }
+
 
     
     // PAY
