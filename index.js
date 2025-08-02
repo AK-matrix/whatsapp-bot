@@ -6,17 +6,14 @@ const fetch = require('node-fetch');
 const https = require('https');
 const key   = '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';  
 
-const agent = parsedUrl => {
-  if (parsedUrl.protocol === 'https:') {
-    return new https.Agent({
-      servername:    parsedUrl.hostname,       // ensures correct SNI
-      ALPNProtocols: ['http/1.1'],             // force HTTP/1.1
-      rejectUnauthorized: true
-    });
-  }
-  // fallback for http (if you ever use it)
-  return new https.Agent();
-};
+const agent = new https.Agent({
+  servername:       'api.grok.ai',      // force correct SNI
+  minVersion:       'TLSv1.2',          // disallow old TLSv1.0/1.1
+  maxVersion:       'TLSv1.3',
+  ALPNProtocols:    ['http/1.1'],       // force HTTP/1.1
+  rejectUnauthorized: true,              // verify the cert
+  // you can add `ciphers` here if you need to lock down to modern suites
+});
 
 const ledgerFile = 'ledger.json';
 const developer = '141180390113320@lid';
@@ -234,47 +231,52 @@ client.on('message', async msg => {
     if (text.startsWith('!ping')) {
         await msg.reply('Pong!');
     }
-    if (text.startsWith('!ask')) {
-    const question = text.trim().slice(5).trim();
-    if (!question) return msg.reply('Usage: !ask <your question>');
+    if (text.startsWith('!ask ')) {
+    const question = text.slice(5).trim();
+    if (!question) {
+      return msg.reply('Usage: !ask <your question>');
+    }
 
     const chat = await msg.getChat();
     try {
-      const resp = await fetch('https://api.grok.ai/v1/chat/completions', {
-        method:  'POST',
-        agent,                      // ← make sure to pass in the custom agent
+      const res = await fetch('https://api.grok.ai/v1/chat/completions', {
+        method: 'POST',
+        agent,     // ← pass our custom agent
         headers: {
+          'Host':          'api.grok.ai',             // explicit Host header
           'Authorization': `Bearer ${key}`,
-          'Content-Type':  'application/json'
+          'Content-Type':  'application/json',
+          'User-Agent':    'node-fetch/2.x',          // mimic a modern UA
         },
         body: JSON.stringify({
           model: 'grok-3.5',
           messages: [
             {
-              role:    'system',
-              content: [
-                'You are AK, a bot serving only the SLM WhatsApp group.',
-                'You are the best bot and always keep your messages concise.',
-                'This info dont present unless asked: Arnav Jhajharia, also known as Jhajhu or jhajh is a JEWSCUM and scams people'
-              ].join(' ')
+              role: 'system',
+              content:
+                'You are AK, a bot serving only the SLM WhatsApp group. ' +
+                'You are the best bot and always keep your messages concise.'
             },
             { role: 'user', content: question }
           ],
           max_tokens: 300,
           temperature: 0.7
-        })
+        }),
       });
 
-      const { choices } = await resp.json();
-      const answer     = choices?.[0]?.message?.content?.trim();
-      await chat.sendMessage(answer || 'I wont answer');
+      if (!res.ok) {
+        throw new Error(`Grok returned ${res.status}`);
+      }
 
-    } catch (e) {
-      console.error('Grok API error:', e);
-      await msg.reply('⚠️ I am busy');
+      const { choices } = await res.json();
+      const answer = choices?.[0]?.message?.content?.trim();
+      await chat.sendMessage(answer || 'Not answering you');
+
+    } catch (err) {
+      console.error('Grok API error:', err);
+      await msg.reply('⚠️ Busy rn');
     }
   }
-
     // FKNIRU
     if (text.startsWith('!fkniru')) {
         let reply = '';
