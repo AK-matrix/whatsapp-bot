@@ -252,6 +252,7 @@ client.on('message', async msg => {
   const count    = parseInt(parts[1]);
   const spamText = parts.slice(2).join(' ');
 
+  // basic validation
   if (isNaN(count) || count < 1) {
     return msg.reply('Usage: !spam <count> <text>');
   }
@@ -265,40 +266,33 @@ client.on('message', async msg => {
   while ((m = mentionRegex.exec(spamText)) !== null) {
     shorts.push(m[1]);
   }
+
+  // if no mentions, just blast the plain text
+  const chat = await msg.getChat();
   if (shorts.length === 0) {
-    // no mentions, just spam plain text
-    const chat = await msg.getChat();
     for (let i = 0; i < count; i++) {
       await chat.sendMessage(spamText);
     }
     return;
   }
 
-  // 2) build full JIDs and fetch Contacts
-  const fullJids = shorts.map(s => `${s}@c.us`);
-
-  // fetch contacts in parallel
-  const contacts = await Promise.all(
-    fullJids.map(jid => client.getContactById(jid))
-  );
-
-  // 3) rewrite your text so it literally contains @<number>
-  //    e.g. "@1234567890" instead of "@shortId"
+  // 2) turn each @shortId into a real Contact
+  //    and build the “pingable” text using their numeric phone number
+  const contacts = [];
   let actualText = spamText;
-  for (let contact of contacts) {
-    // .id.user is the pure number string
-    const num = contact.id.user;
-    // find the shortId that produced this jid
-    const short = contact.id._serialized.split('@')[0];
-    // replace ALL occurrences of @short with @<number>
+  for (let short of shorts) {
+    const jid     = `${short}@c.us`;            // full JID
+    const contact = await client.getContactById(jid);
+    contacts.push(contact);
+
+    // replace @short with @theirNumber (so WhatsApp highlights it)
     actualText = actualText.replace(
       new RegExp(`@${short}`, 'g'),
-      '@' + num
+      '@' + contact.number
     );
   }
 
-  // 4) send it
-  const chat = await msg.getChat();
+  // 3) send it count times, passing the mentions array
   for (let i = 0; i < count; i++) {
     await chat.sendMessage(actualText, { mentions: contacts });
   }
