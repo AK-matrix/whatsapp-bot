@@ -288,7 +288,7 @@ client.on('message', async msg => {
     }
 
     // SPAM
-    if (text.startsWith('!spam')) {
+   /* if (text.startsWith('!spam')) {
   const parts    = msg.body.split(' ');
   const count    = parseInt(parts[1]);
   const spamText = parts.slice(2).join(' ');
@@ -307,7 +307,7 @@ client.on('message', async msg => {
     }
   return;
 
-}
+}*/
 
 
     
