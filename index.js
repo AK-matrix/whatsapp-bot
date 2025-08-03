@@ -75,7 +75,7 @@ function saveLedger() {
 
 function parseLog(log) {
 
-    if (log.startsWith('Split')) {
+   /* if (log.startsWith('Split')) {
         const match = log.match(/Split (\d+) paid by (\w+) for (.+) \((.+)\)/);
         if (match) {
             return { type: 'split', amount: parseInt(match[1]), payer: match[2].toLowerCase(), names: match[3].split(', ').map(n=>n.toLowerCase()), reason: match[4] };
@@ -87,7 +87,7 @@ function parseLog(log) {
         }
     }
     return null;
-}
+}*/
 
 const client = new Client({
     authStrategy: new LocalAuth(),
@@ -118,7 +118,7 @@ client.on('message', async msg => {
     const text = msg.body.toLowerCase();
     const sender = msg.author || msg.from;
     if (banned.includes(sender)) {
-            await msg.reply("JEWSCUMS ARE BANNED");
+            await msg.reply("IDIOTS ARE BANNED");
             return;
         }
     if (text.startsWith('!enable')) {
@@ -147,7 +147,7 @@ client.on('message', async msg => {
   }
 
     // SPLIT with correct credit/debt logic (payer gains credit, others owe)
-    if (text.startsWith('!split')) {
+    /*if (text.startsWith('!split')) {
   // this regex now:
   // 1) captures the amount
   // 2) captures the payer
@@ -207,7 +207,7 @@ client.on('message', async msg => {
     `Each owes $${perPerson.toFixed(2)}. ` +
     `${payer} gets back $${creditToPayer.toFixed(2)}.`
   );
-}
+}*/
 
 
     if (text.startsWith('!help')) {
@@ -339,7 +339,7 @@ client.on('message', async msg => {
         }
     }
 
-    // LOGS
+    // LOGS/*
     if (text.startsWith('!logs')) {
         if (ledger.logs.length === 0) {
             await msg.reply('No transactions yet.');
@@ -347,7 +347,7 @@ client.on('message', async msg => {
             await msg.reply('Logs:\n' + ledger.logs.join('\n'));
         }
     }
-
+/*
     // BALANCE
     if (text.startsWith('!balance')) {
         let reply = 'Balances (positive = credit, negative = owes money):\n\n';
@@ -425,6 +425,7 @@ client.on('message', async msg => {
         saveLedger();
         await msg.reply(`Reverted last ${count} transactions and updated balances.`);
     }
+    */
 
      if (text.startsWith('!ban ')) {
     if (sender !== developer) {
@@ -444,13 +445,13 @@ client.on('message', async msg => {
     const fullId  = `${shortId}@lid`;
 
     if (banned.includes(fullId)) {
-      await msg.reply(`That jewscum is already banned.`);
+      await msg.reply(`That idiot is already banned.`);
       return;
     }
 
     banned.push(fullId);
     saveBanList();
-    await msg.reply(`🚫 Banned that jewscum`);
+    await msg.reply(`🚫 Banned that idiot`);
     return;
   }
 
@@ -491,5 +492,6 @@ client.on('message', async msg => {
         }
     }
 });
+}
 
 client.initialize();
