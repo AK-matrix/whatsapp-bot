@@ -297,7 +297,7 @@ client.on('message', async msg => {
   if (isNaN(count) || count < 1) {
     return msg.reply('Usage: !spam <count> <text>');
   }
-  if (count > 50 && sender !== developer) {
+  if (count > 5) {
     return msg.reply("You're not a developer");
   }
 
