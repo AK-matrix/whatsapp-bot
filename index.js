@@ -31,7 +31,7 @@ async function askGroq(prompt) {
   return choices?.[0]?.message?.content?.trim();
 }
 const ledgerFile = 'ledger.json';
-const developer = '141180390113320@lid';
+const developer = '6585005795@c.us';
 const BAN_FILE = './banned.json';
 
 // Load (or initialize) your ban list
@@ -117,7 +117,6 @@ client.on('ready', () => {
 client.on('message', async msg => {
     const text = msg.body.toLowerCase();
     const sender = msg.author || msg.from;
-    console.log(text, sender);
     if (banned.includes(sender)) {
             await msg.reply("IDIOTS ARE BANNED");
             return;
