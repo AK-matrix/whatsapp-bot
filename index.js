@@ -442,7 +442,7 @@ client.on('message', async msg => {
 
     // Reconstruct full JID: <shortId>@lid
     const shortId = match[1];
-    const fullId  = `${shortId}@lid`;
+    const fullId  = `${shortId}@c.us`;
 
     if (banned.includes(fullId)) {
       await msg.reply(`That idiot is already banned.`);
@@ -467,7 +467,7 @@ client.on('message', async msg => {
       return;
     }
     const shortId = match[1];
-    const fullId  = `${shortId}@lid`;
+    const fullId  = `${shortId}@c.us`;
     const idx     = banned.indexOf(fullId);
     if (idx === -1) {
       await msg.reply(`He is not banned.`);
