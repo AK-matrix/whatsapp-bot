@@ -73,9 +73,9 @@ function saveLedger() {
     fs.writeFileSync(ledgerFile, JSON.stringify(ledger, null, 2));
 }
 
-function parseLog(log) {
+/*function parseLog(log) {
 
-   /* if (log.startsWith('Split')) {
+    if (log.startsWith('Split')) {
         const match = log.match(/Split (\d+) paid by (\w+) for (.+) \((.+)\)/);
         if (match) {
             return { type: 'split', amount: parseInt(match[1]), payer: match[2].toLowerCase(), names: match[3].split(', ').map(n=>n.toLowerCase()), reason: match[4] };
@@ -492,6 +492,6 @@ client.on('message', async msg => {
         }
     }
 });
-}
+
 
 client.initialize();
