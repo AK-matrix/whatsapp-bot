@@ -117,6 +117,7 @@ client.on('ready', () => {
 client.on('message', async msg => {
     const text = msg.body.toLowerCase();
     const sender = msg.author || msg.from;
+    console.log(text, sender);
     if (banned.includes(sender)) {
             await msg.reply("IDIOTS ARE BANNED");
             return;
