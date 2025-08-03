@@ -16,7 +16,7 @@ async function askGroq(prompt) {
       messages: [
         {
           role:    'system',
-          content: 'You are Groq, codename AK, exclusively for the SLM WhatsApp group. You are the best bot and keep your messages concise.'
+          content: 'You are AK, exclusively for this WhatsApp group. You are the best bot and keep your messages concise.'
         },
         { role: 'user', content: prompt }
       ],
@@ -216,9 +216,9 @@ client.on('message', async msg => {
 
 !ping - Check if bot is online
 
-!fkniru - Sends "FK NIRU" 5 times
+!ask - Converse with AK
 
-@lamians - Tag everyone
+@everyone - Tag everyone
 
 !flip - Coin flip
 
@@ -268,7 +268,7 @@ client.on('message', async msg => {
     }
 
     // TAG ALL (@lamians)
-    if (text.startsWith('@lamians') && msg.from.includes('@g.us')) {
+    if (text.startsWith('@lamians') || text.startsWith('@everyone')) {
         const chat = await msg.getChat();
         const mentions = chat.participants.map(p => p.id._serialized);
         let message = mentions.map(m => `@${m.split('@')[0]}`).join(' ');
