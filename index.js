@@ -3,32 +3,53 @@ const qrcode = require('qrcode-terminal');
 const fs = require('fs');
 const fetch = require('node-fetch');
 const GROQ_KEY = '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';  
+let context = [];
 
 async function askGroq(prompt) {
+  // Add the new user prompt to context
+  context.push({ role: 'user', content: prompt });
+
+  // Trim context to last 8 messages
+  if (context.length > 8) {
+    context = context.slice(context.length - 8);
+  }
+
+  // Build messages with system prompt + context
+  const messages = [
+    {
+      role:    'system',
+      content: 'You are AK, exclusively for this WhatsApp group. You are the best bot and keep your messages concise.'
+    },
+    ...context
+  ];
+
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${GROQ_KEY}`,
-      'Content-Type':  'application/json'
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify({
       model: 'llama3-70b-8192',
-      messages: [
-        {
-          role:    'system',
-          content: 'You are AK, exclusively for this WhatsApp group. You are the best bot and keep your messages concise.'
-        },
-        { role: 'user', content: prompt }
-      ],
+      messages,
       temperature: 0.7
     })
   });
 
-  if (!res.ok) {
-    throw new Error(`Groq API returned ${res.status}`);
-  }
+  if (!res.ok) throw new Error(`Groq API returned ${res.status}`);
+
   const { choices } = await res.json();
-  return choices?.[0]?.message?.content?.trim();
+  const reply = choices?.[0]?.message?.content?.trim();
+
+  // Add assistant reply to context
+  if (reply) {
+    context.push({ role: 'assistant', content: reply });
+    if (context.length > 8) {
+      context = context.slice(context.length - 8);
+    }
+  }
+
+  return reply;
 }
 const ledgerFile = 'ledger.json';
 const developer = '141180390113320@lid';
@@ -117,6 +138,7 @@ client.on('ready', () => {
 client.on('message', async msg => {
     const text = msg.body.toLowerCase();
     const sender = msg.author || msg.from;
+    console.log(text);
     if (banned.includes(sender)) {
             return;
         }
