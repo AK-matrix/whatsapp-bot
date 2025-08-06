@@ -10,6 +10,7 @@ async function askGroq(prompt) {
   // Add the new user prompt to context
   // Push new user message
 // Push new user message
+// Add new user message
 context.push({ role: 'user', content: prompt });
 
 // Trim context to last 15 messages
@@ -17,7 +18,7 @@ if (context.length > 15) {
   context = context.slice(context.length - 15);
 }
 
-// Build contents: Gemini only needs `parts.text`, no roles
+// Convert context ONLY to texts (ignore roles entirely)
 const contents = [
   {
     parts: [
@@ -32,11 +33,13 @@ const contents = [
     ]
   },
   ...context.map(m => ({
-    parts: [{ text: m.content }]
+    parts: [{ text: String(m.content || '') }]
   }))
 ];
 
-// API call
+// DEBUG: Log payload before sending
+console.log('Payload:', JSON.stringify({ contents, generationConfig: { temperature: 0.7 } }, null, 2));
+
 const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent', {
   method: 'POST',
   headers: {
@@ -49,12 +52,14 @@ const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models
   })
 });
 
-if (!res.ok) throw new Error(`Gemini API returned ${res.status}`);
+if (!res.ok) {
+  const errorText = await res.text();
+  throw new Error(`Gemini API returned ${res.status}: ${errorText}`);
+}
 
 const data = await res.json();
 const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 
-// Add assistant reply to context
 if (reply) {
   context.push({ role: 'assistant', content: reply });
   if (context.length > 8) context = context.slice(context.length - 8);
