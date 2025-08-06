@@ -296,6 +296,29 @@ client.on('message', async msg => {
         await chat.sendMessage(message, { mentions });
     }
 
+    else if (text.startsWith('@pgp') || text.startsWith('@utr')) {
+    const pgpIDs = [
+        '247523411267699@lid',
+        '53301114568959@lid',
+        '227084081361150@lid'
+    ];
+
+    const utrIDs = [
+        '195631616401640@lid',
+        '21535469342839@lid',
+        '126680563753151@lid'
+    ];
+
+    const targetIDs = text.startsWith('@pgp') ? pgpIDs : utrIDs;
+
+    // Format mentions and message
+    const mentions = targetIDs;
+    const message = mentions.map(m => `@${m.split('@')[0]}`).join(' ');
+
+    const chat = await msg.getChat();
+    await chat.sendMessage(message, { mentions });
+}
+
     // FLIP
     if (text.startsWith('!flip')) {
         const result = Math.random() < 0.5 ? 'Heads' : 'Tails';
@@ -312,7 +335,7 @@ client.on('message', async msg => {
     if (text.startsWith('!spam')) {
   const parts    = msg.body.split(' ');
   const count    = parseInt(parts[1]);
-  const spamText = parts.slice(2).join(' ');
+  let spamText   = parts.slice(2).join(' ');
 
   // basic validation
   if (isNaN(count) || count < 1) {
@@ -323,14 +346,26 @@ client.on('message', async msg => {
   }
 
   const chat = await msg.getChat();
+
+  // Detect and handle @mentions inside the spam text
+  const mentions = [];
+  const mentionRegex = /@(\d{5,})/g; // Matches @ followed by a WhatsApp-like ID
+  spamText = spamText.replace(mentionRegex, (_, id) => {
+    const fullId = `${id}@c.us`;
+    mentions.push(fullId);
+    return `@${id}`;
+  });
+
   let delay = 0.5;
   for (let i = 0; i < count; i++) {
-      delay += Math.random();
-      setTimeout(() => {chat.sendMessage(spamText);}, delay);
-    }
+    delay += Math.random();
+    setTimeout(() => {
+      chat.sendMessage(spamText, { mentions });
+    }, delay * 1000); // Multiply by 1000 for milliseconds
+  }
   return;
-
 }
+
 
 
     
