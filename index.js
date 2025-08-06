@@ -272,7 +272,7 @@ client.on('message', async msg => {
   if (!question) return msg.reply('Usage: !ask <your question>');
 
   try {
-    const answer = await askGroq("sender: ", sender, " question: ", question);
+    const answer = await askGroq("sender: " + sender + " question: " + question);
     const chat   = await msg.getChat();
     await chat.sendMessage(answer || '🤖 (no answer)');
   } catch (err) {
