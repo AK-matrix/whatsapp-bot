@@ -302,8 +302,9 @@ client.on('message', async msg => {
   }
 
   const chat = await msg.getChat();
+  let delay = 0.5;
   for (let i = 0; i < count; i++) {
-      const delay = (Math.random()) + 0.5;
+      delay += Math.random();
       setTimeout(() => {chat.sendMessage(spamText);}, delay);
     }
   return;
