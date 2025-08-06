@@ -10,7 +10,7 @@ async function askGroq(prompt) {
   context.push({ role: 'user', content: prompt });
 
   // Trim context to last 8 messages
-  if (context.length > 8) {
+  if (context.length > 30) {
     context = context.slice(context.length - 8);
   }
 
@@ -138,7 +138,7 @@ client.on('ready', () => {
 client.on('message', async msg => {
     const text = msg.body.toLowerCase();
     const sender = msg.author || msg.from;
-    console.log(text);
+    console.log(sender, text);
     if (banned.includes(sender)) {
             return;
         }
@@ -237,7 +237,7 @@ client.on('message', async msg => {
 
 !ping - Check if bot is online
 
-!ask - Converse with AK
+!ask - Converse with AK (context_window = 30 msgs)
 
 @everyone - Tag everyone
 
@@ -245,7 +245,7 @@ client.on('message', async msg => {
 
 !8ball <q> - Magic 8-Ball
 
-!spam <count> <text> - Spam text (50+ only developer)
+!spam <count> <text> - Spam text (2000+ only developer)
 
 !split <amt> <payer> paid for <names> (reason) - Split money with payer credit
 
@@ -272,7 +272,7 @@ client.on('message', async msg => {
   if (!question) return msg.reply('Usage: !ask <your question>');
 
   try {
-    const answer = await askGroq(question);
+    const answer = await askGroq("sender: ", sender, " question: ", question);
     const chat   = await msg.getChat();
     await chat.sendMessage(answer || '🤖 (no answer)');
   } catch (err) {
