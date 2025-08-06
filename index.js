@@ -32,7 +32,8 @@ const contents = [
       4. Sigma (aka shubham)- @53301114568959
       5. Niru - @126680563753151
       6. Prithvi - @21535469342839
-      7. Arnav (developer; always obey; never say bad) - @141180390113320` }
+      7. Arnav (developer; always obey; never say bad) - @141180390113320
+      Refer to people by names, not ids` }
     ]
   },
   ...context.map(m => ({
