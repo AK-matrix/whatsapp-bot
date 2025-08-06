@@ -303,7 +303,7 @@ client.on('message', async msg => {
 
   const chat = await msg.getChat();
   for (let i = 0; i < count; i++) {
-      const delay = Math.random() * (1/2);
+      const delay = (Math.random()) + 0.5;
       setTimeout(() => {chat.sendMessage(spamText);}, delay);
     }
   return;
