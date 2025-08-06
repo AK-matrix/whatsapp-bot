@@ -11,6 +11,7 @@ async function askGroq(prompt) {
   // Push new user message
 // Push new user message
 // Add new user message
+// Add new user message
 context.push({ role: 'user', content: prompt });
 
 // Trim context to last 15 messages
@@ -18,9 +19,10 @@ if (context.length > 15) {
   context = context.slice(context.length - 15);
 }
 
-// Convert context ONLY to texts (ignore roles entirely)
+// Build contents with proper roles
 const contents = [
   {
+    role: 'user',
     parts: [
       { text: `You are AK, exclusively for SLM group. You are the best bot and keep your messages concise. Giving you the mapping of whatsapp ids and names, address people this way:
       1. Arun - @247523411267699
@@ -33,11 +35,12 @@ const contents = [
     ]
   },
   ...context.map(m => ({
+    role: m.role === 'assistant' ? 'model' : 'user', // Map assistant → model
     parts: [{ text: String(m.content || '') }]
   }))
 ];
 
-// DEBUG: Log payload before sending
+// DEBUG: Log payload
 console.log('Payload:', JSON.stringify({ contents, generationConfig: { temperature: 0.7 } }, null, 2));
 
 const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent', {
