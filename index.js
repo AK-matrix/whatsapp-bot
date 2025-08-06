@@ -8,14 +8,15 @@ let context = [];
 
 async function askGroq(prompt) {
   // Add the new user prompt to context
-  context.push({ role: 'user', content: prompt });
+  // Push new user message
+context.push({ role: 'user', content: prompt });
 
 // Trim context to last 15 messages
 if (context.length > 15) {
   context = context.slice(context.length - 15);
 }
 
-// Build contents with system prompt + context
+// Build messages with system prompt + context
 const messages = [
   {
     role: 'system',
@@ -31,21 +32,20 @@ const messages = [
   ...context
 ];
 
-// Convert messages to Gemini API's `contents` format
+// Convert to Gemini's `contents` format (system is merged as first user message)
 const contents = messages.map(m => ({
-  role: m.role === 'assistant' ? 'model' : m.role === 'system' ? 'user' : m.role,
   parts: [{ text: m.content }]
 }));
 
-
-  const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent', {
+// API call for Gemini 2.5 Flash Lite
+const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent', {
   method: 'POST',
   headers: {
-    'Authorization': `Bearer ${GEMINI_KEY}`,
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'X-goog-api-key': GEMINI_KEY
   },
   body: JSON.stringify({
-    contents, // from the previous messages-to-contents mapping
+    contents,
     generationConfig: { temperature: 0.7 }
   })
 });
@@ -54,7 +54,6 @@ if (!res.ok) throw new Error(`Gemini API returned ${res.status}`);
 
 const data = await res.json();
 const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-
 
 // Add assistant reply to context
 if (reply) {
@@ -65,6 +64,7 @@ if (reply) {
 }
 
 return reply;
+
 
 }
 const ledgerFile = 'ledger.json';
