@@ -18,11 +18,11 @@ async function askGroq(prompt) {
   const messages = [
     {
       role:    'system',
-      content: `You are AK, exclusively for this WhatsApp group. You are the best bot and keep your messages concise. Giving you the mapping of whatsapp ids and names, address people this way:
+      content: `You are AK, exclusively for SLM group. You are the best bot and keep your messages concise. Giving you the mapping of whatsapp ids and names, address people this way:
       1. Arun - @247523411267699
-      2. Jew - @195631616401640
-      3. Milo - @227084081361150
-      4. Sigma - @53301114568959
+      2. Jew (aka jhajhu) - @195631616401640
+      3. Milo (aka sidharth) call- @227084081361150
+      4. Sigma (aka shubham)- @53301114568959
       5. Niru - @126680563753151
       6. Prithvi - @21535469342839
       7. Arnav - @141180390113320`
@@ -244,27 +244,17 @@ client.on('message', async msg => {
 
 !ping - Check if bot is online
 
-!ask - Converse with AK (context_window = 30 msgs)
+ak <question> - Converse with AK (context_window = 30 msgs)
 
-@everyone - Tag everyone
+@everyone / @pgp / @utr - For tagging
 
-!flip - Coin flip
-
-!8ball <q> - Magic 8-Ball
+!flip / !8ball <q> - For fun
 
 !spam <count> <text> - Spam text (2000+ only developer)
 
-!split <amt> <payer> paid for <names> (reason) - Split money with payer credit
-
-!<payer> pays <receiver> <amt> (reason) - Transfer money
-
-!logs - Show transactions
-
-!balance - Show balances
-
 !sticker (with image) - Make sticker
 
-**Developer commands are hidden**`
+**Developer and ledger commands are hidden**`
 
 
         );
@@ -274,9 +264,9 @@ client.on('message', async msg => {
     if (text.startsWith('!ping')) {
         await msg.reply('Pong!');
     }
-    if (text.startsWith('!ask ')) {
+    if (text.startsWith('ak ')) {
   const question = text.slice(5).trim();
-  if (!question) return msg.reply('Usage: !ask <your question>');
+  if (!question) return msg.reply('Usage: ak <your question>');
 
   try {
     const answer = await askGroq("sender: " + sender + " question: " + question);
@@ -293,6 +283,13 @@ client.on('message', async msg => {
         let reply = '';
         for (let i = 0; i < 5; i++) reply += 'FK NIRU\n';
         await msg.reply(reply.trim());
+    }
+
+    if (text.startsWith('!fkjhajh')) {
+        let reply = '';
+        for (let i = 0; i < 5; i++) {
+            await msg.reply('FK JHAJEW');
+        }
     }
 
     // TAG ALL (@lamians)
