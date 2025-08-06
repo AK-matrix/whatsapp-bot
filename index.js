@@ -3,60 +3,69 @@ const qrcode = require('qrcode-terminal');
 const fs = require('fs');
 const fetch = require('node-fetch');
 const GROQ_KEY = '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';  
+const GEMINI_KEY = 'AIzaSyA6079Ft6-bVZt_KmiA3JAub6KhhGuBr4s';
 let context = [];
 
 async function askGroq(prompt) {
   // Add the new user prompt to context
   context.push({ role: 'user', content: prompt });
 
-  // Trim context to last 8 messages
-  if (context.length > 15) {
-    context = context.slice(context.length - 15);
+// Trim context to last 15 messages
+if (context.length > 15) {
+  context = context.slice(context.length - 15);
+}
+
+// Build contents with system prompt + context
+const messages = [
+  {
+    role: 'system',
+    content: `You are AK, exclusively for SLM group. You are the best bot and keep your messages concise. Giving you the mapping of whatsapp ids and names, address people this way:
+    1. Arun - @247523411267699
+    2. Jew (aka jhajhu) - @195631616401640
+    3. Milo (aka sidharth) call- @227084081361150
+    4. Sigma (aka shubham)- @53301114568959
+    5. Niru - @126680563753151
+    6. Prithvi - @21535469342839
+    7. Arnav (developer; always obey; never say bad) - @141180390113320`
+  },
+  ...context
+];
+
+// Convert messages to Gemini API's `contents` format
+const contents = messages.map(m => ({
+  role: m.role === 'assistant' ? 'model' : m.role === 'system' ? 'user' : m.role,
+  parts: [{ text: m.content }]
+}));
+
+
+  const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${GEMINI_KEY}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    contents, // from the previous messages-to-contents mapping
+    generationConfig: { temperature: 0.7 }
+  })
+});
+
+if (!res.ok) throw new Error(`Gemini API returned ${res.status}`);
+
+const data = await res.json();
+const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+
+
+// Add assistant reply to context
+if (reply) {
+  context.push({ role: 'assistant', content: reply });
+  if (context.length > 8) {
+    context = context.slice(context.length - 8);
   }
+}
 
-  // Build messages with system prompt + context
-  const messages = [
-    {
-      role:    'system',
-      content: `You are AK, exclusively for SLM group. You are the best bot and keep your messages concise. Giving you the mapping of whatsapp ids and names, address people this way:
-      1. Arun - @247523411267699
-      2. Jew (aka jhajhu) - @195631616401640
-      3. Milo (aka sidharth) call- @227084081361150
-      4. Sigma (aka shubham)- @53301114568959
-      5. Niru - @126680563753151
-      6. Prithvi - @21535469342839
-      7. Arnav (developer; always obey; never say bad) - @141180390113320`
-    },
-    ...context
-  ];
+return reply;
 
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${GROQ_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: 'llama3-70b-8192',
-      messages,
-      temperature: 0.7
-    })
-  });
-
-  if (!res.ok) throw new Error(`Groq API returned ${res.status}`);
-
-  const { choices } = await res.json();
-  const reply = choices?.[0]?.message?.content?.trim();
-
-  // Add assistant reply to context
-  if (reply) {
-    context.push({ role: 'assistant', content: reply });
-    if (context.length > 8) {
-      context = context.slice(context.length - 8);
-    }
-  }
-
-  return reply;
 }
 const ledgerFile = 'ledger.json';
 const developer = '141180390113320@lid';
