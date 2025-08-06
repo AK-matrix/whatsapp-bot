@@ -283,8 +283,8 @@ ak <question> - Converse with AK (context_window = 30 msgs)
     if (text.startsWith('!ping')) {
         await msg.reply('Pong!');
     }
-    if (text.startsWith('ak ')) {
-  const question = text.slice(3).trim();
+    if (text.startsWith('ak')) {
+  const question = text.slice(2).trim();
   if (!question) return msg.reply('Usage: ak <your question>');
 
   try {
