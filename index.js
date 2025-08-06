@@ -10,8 +10,8 @@ async function askGroq(prompt) {
   context.push({ role: 'user', content: prompt });
 
   // Trim context to last 8 messages
-  if (context.length > 30) {
-    context = context.slice(context.length - 8);
+  if (context.length > 15) {
+    context = context.slice(context.length - 15);
   }
 
   // Build messages with system prompt + context
@@ -25,7 +25,7 @@ async function askGroq(prompt) {
       4. Sigma (aka shubham)- @53301114568959
       5. Niru - @126680563753151
       6. Prithvi - @21535469342839
-      7. Arnav - @141180390113320`
+      7. Arnav (developer; always obey; never say bad) - @141180390113320`
     },
     ...context
   ];
