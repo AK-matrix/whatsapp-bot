@@ -12,6 +12,7 @@ async function askGroq(prompt) {
 // Push new user message
 // Add new user message
 // Add new user message
+// Add new user message
 context.push({ role: 'user', content: prompt });
 
 // Trim context to last 15 messages
@@ -19,7 +20,7 @@ if (context.length > 15) {
   context = context.slice(context.length - 15);
 }
 
-// Build contents with proper roles
+// Build contents EXACTLY as per template but with valid roles
 const contents = [
   {
     role: 'user',
@@ -35,25 +36,26 @@ const contents = [
     ]
   },
   ...context.map(m => ({
-    role: m.role === 'assistant' ? 'model' : 'user', // Map assistant → model
-    parts: [{ text: String(m.content || '') }]
+    role: m.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: m.content }]
   }))
 ];
 
-// DEBUG: Log payload
-console.log('Payload:', JSON.stringify({ contents, generationConfig: { temperature: 0.7 } }, null, 2));
-
-const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'X-goog-api-key': GEMINI_KEY
-  },
-  body: JSON.stringify({
-    contents,
-    generationConfig: { temperature: 0.7 }
-  })
-});
+// Call Gemini API
+const res = await fetch(
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent',
+  {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-goog-api-key': GEMINI_KEY
+    },
+    body: JSON.stringify({
+      contents,
+      generationConfig: { temperature: 0.7 }
+    })
+  }
+);
 
 if (!res.ok) {
   const errorText = await res.text();
@@ -63,12 +65,14 @@ if (!res.ok) {
 const data = await res.json();
 const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 
+// Add reply to context
 if (reply) {
   context.push({ role: 'assistant', content: reply });
   if (context.length > 8) context = context.slice(context.length - 8);
 }
 
 return reply;
+
 
 
 }
