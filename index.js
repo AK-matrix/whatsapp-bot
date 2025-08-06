@@ -31,7 +31,7 @@ async function askGroq(prompt) {
   return choices?.[0]?.message?.content?.trim();
 }
 const ledgerFile = 'ledger.json';
-const developer = '6585005795@c.us';
+const developer = '141180390113320@lid';
 const BAN_FILE = './banned.json';
 
 // Load (or initialize) your ban list
@@ -288,7 +288,7 @@ client.on('message', async msg => {
     }
 
     // SPAM
-   /* if (text.startsWith('!spam')) {
+    if (text.startsWith('!spam')) {
   const parts    = msg.body.split(' ');
   const count    = parseInt(parts[1]);
   const spamText = parts.slice(2).join(' ');
@@ -297,17 +297,18 @@ client.on('message', async msg => {
   if (isNaN(count) || count < 1) {
     return msg.reply('Usage: !spam <count> <text>');
   }
-  if (count > 5) {
+  if (count > 2000) {
     return msg.reply("You're not a developer");
   }
 
   const chat = await msg.getChat();
   for (let i = 0; i < count; i++) {
-      await chat.sendMessage(spamText);
+      const delay = Math.random() * (1/2);
+      setTimeout(() => {chat.sendMessage(spamText);}, delay);
     }
   return;
 
-}*/
+}
 
 
     
@@ -442,7 +443,7 @@ client.on('message', async msg => {
 
     // Reconstruct full JID: <shortId>@lid
     const shortId = match[1];
-    const fullId  = `${shortId}@c.us`;
+    const fullId  = `${shortId}@lid`;
 
     if (banned.includes(fullId)) {
       await msg.reply(`That idiot is already banned.`);
@@ -467,7 +468,7 @@ client.on('message', async msg => {
       return;
     }
     const shortId = match[1];
-    const fullId  = `${shortId}@c.us`;
+    const fullId  = `${shortId}@lid`;
     const idx     = banned.indexOf(fullId);
     if (idx === -1) {
       await msg.reply(`He is not banned.`);
