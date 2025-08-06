@@ -25,7 +25,7 @@ const contents = [
   {
     role: 'user',
     parts: [
-      { text: `You are AK, exclusively for SLM group. You are the best bot and keep your messages concise. Giving you the mapping of whatsapp ids and names, address people this way:
+      { text: `You are AK, exclusively for SLM group. You are the best bot and keep your messages concise. Giving you the mapping of whatsapp names and IDs:
       1. Arun - @247523411267699
       2. Jew (aka jhajhu) - @195631616401640
       3. Milo (aka sidharth) call- @227084081361150
@@ -284,7 +284,7 @@ ak <question> - Converse with AK (context_window = 30 msgs)
         await msg.reply('Pong!');
     }
     if (text.startsWith('ak ')) {
-  const question = text.slice(5).trim();
+  const question = text.slice(3).trim();
   if (!question) return msg.reply('Usage: ak <your question>');
 
   try {
