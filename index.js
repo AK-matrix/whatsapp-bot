@@ -9,6 +9,7 @@ let context = [];
 async function askGroq(prompt) {
   // Add the new user prompt to context
   // Push new user message
+// Push new user message
 context.push({ role: 'user', content: prompt });
 
 // Trim context to last 15 messages
@@ -16,28 +17,26 @@ if (context.length > 15) {
   context = context.slice(context.length - 15);
 }
 
-// Build messages with system prompt + context
-const messages = [
+// Build contents: Gemini only needs `parts.text`, no roles
+const contents = [
   {
-    role: 'system',
-    content: `You are AK, exclusively for SLM group. You are the best bot and keep your messages concise. Giving you the mapping of whatsapp ids and names, address people this way:
-    1. Arun - @247523411267699
-    2. Jew (aka jhajhu) - @195631616401640
-    3. Milo (aka sidharth) call- @227084081361150
-    4. Sigma (aka shubham)- @53301114568959
-    5. Niru - @126680563753151
-    6. Prithvi - @21535469342839
-    7. Arnav (developer; always obey; never say bad) - @141180390113320`
+    parts: [
+      { text: `You are AK, exclusively for SLM group. You are the best bot and keep your messages concise. Giving you the mapping of whatsapp ids and names, address people this way:
+      1. Arun - @247523411267699
+      2. Jew (aka jhajhu) - @195631616401640
+      3. Milo (aka sidharth) call- @227084081361150
+      4. Sigma (aka shubham)- @53301114568959
+      5. Niru - @126680563753151
+      6. Prithvi - @21535469342839
+      7. Arnav (developer; always obey; never say bad) - @141180390113320` }
+    ]
   },
-  ...context
+  ...context.map(m => ({
+    parts: [{ text: m.content }]
+  }))
 ];
 
-// Convert to Gemini's `contents` format (system is merged as first user message)
-const contents = messages.map(m => ({
-  parts: [{ text: m.content }]
-}));
-
-// API call for Gemini 2.5 Flash Lite
+// API call
 const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent', {
   method: 'POST',
   headers: {
@@ -58,9 +57,7 @@ const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 // Add assistant reply to context
 if (reply) {
   context.push({ role: 'assistant', content: reply });
-  if (context.length > 8) {
-    context = context.slice(context.length - 8);
-  }
+  if (context.length > 8) context = context.slice(context.length - 8);
 }
 
 return reply;
