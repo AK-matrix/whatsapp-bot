@@ -118,7 +118,6 @@ client.on('message', async msg => {
     const text = msg.body.toLowerCase();
     const sender = msg.author || msg.from;
     if (banned.includes(sender)) {
-            await msg.reply("IDIOTS ARE BANNED");
             return;
         }
     if (text.startsWith('!enable')) {
