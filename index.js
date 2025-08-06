@@ -306,7 +306,8 @@ client.on('message', async msg => {
     const utrIDs = [
         '195631616401640@lid',
         '21535469342839@lid',
-        '126680563753151@lid'
+        '126680563753151@lid',
+        '141180390113320@lid'
     ];
 
     const targetIDs = text.startsWith('@pgp') ? pgpIDs : utrIDs;
@@ -351,7 +352,7 @@ client.on('message', async msg => {
   const mentions = [];
   const mentionRegex = /@(\d{5,})/g; // Matches @ followed by a WhatsApp-like ID
   spamText = spamText.replace(mentionRegex, (_, id) => {
-    const fullId = `${id}@c.us`;
+    const fullId = `${id}@lid`;
     mentions.push(fullId);
     return `@${id}`;
   });
