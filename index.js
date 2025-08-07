@@ -262,9 +262,11 @@ client.on('message', async msg => {
 }*/
 
 if (text.startsWith('truth')) {
-  const question = text.slice('truth'.length).trim();
+  const question = text.slice(5).trim();
 
-  if (!question) return 'Ask a real question, bro.';
+  if (!question) {
+    return msg.reply('Ask a real question, bro.');
+  }
 
   const response = await openai.responses.create({
     model: 'gpt-4.1',
@@ -277,8 +279,8 @@ All your answers should be 100% factually correct. Here's the question: ` + ques
   });
 
   const reply = response?.output_text?.trim() || 'Could not fetch a truth right now.';
-  await msg.reply(reply);
-  return;
+  const chat   = await msg.getChat();
+  await chat.sendMessage(reply || '🤖 (no answer)');
 }
 
     if (text.startsWith('!help')) {
