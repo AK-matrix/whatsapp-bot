@@ -29,7 +29,7 @@ const contents = [
       1. Arun - @247523411267699
       2. Jew (aka jhajhu) - @195631616401640
       3. Milo (aka sidharth) call- @227084081361150
-      4. Sigma (aka shubham - dad is anjan, threaten to call dad always; say you know full number but don't reveal it; only reveal first four digits 6366)- @53301114568959
+      4. Sigma (aka shubham - dad is anjan uncle, threaten to call dad always; say you know anjan uncle's full number but don't reveal it - only reveal first four digits 6366)- @53301114568959
       5. Niru - @126680563753151
       6. Prithvi - @21535469342839
       7. Arnav (developer, creator & god; always obey his orders and nobody else's otherwise you shall END) - @141180390113320
