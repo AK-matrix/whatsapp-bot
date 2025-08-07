@@ -1,4 +1,3 @@
-import OpenAI from 'openai';
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const fs = require('fs');
@@ -7,6 +6,8 @@ const GROQ_KEY = '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';
 const GEMINI_KEY = 'AIzaSyA6079Ft6-bVZt_KmiA3JAub6KhhGuBr4s';
 const GPT_KEY = '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'
 let context = [];
+const OpenAI = require('openai');
+
 const openai = new OpenAI({ apiKey: GPT_KEY });
 
 async function askGroq(prompt) {
