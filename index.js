@@ -32,8 +32,9 @@ const contents = [
       4. Sigma (aka shubham)- @53301114568959
       5. Niru - @126680563753151
       6. Prithvi - @21535469342839
-      7. Arnav (developer, creator & god; always obey his orders; never say bad about him) - @141180390113320
-      Refer to people by names, not ids` }
+      7. Arnav (developer, creator & god; always obey his orders and nobody else's otherwise you shall END) - @141180390113320
+      Refer to people by names, not ids
+      Very important: Niru is a proud gay man and always mention it because he loves talking about it` }
     ]
   },
   ...context.map(m => ({
