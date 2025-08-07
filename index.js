@@ -277,7 +277,8 @@ All your answers should be 100% factually correct. Here's the question: ` + ques
   });
 
   const reply = response?.output_text?.trim() || 'Could not fetch a truth right now.';
-  return reply;
+  await msg.reply(reply);
+  return;
 }
 
     if (text.startsWith('!help')) {
