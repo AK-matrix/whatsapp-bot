@@ -2,7 +2,7 @@ const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const fs = require('fs');
 const fetch = require('node-fetch');
-const GROQ_KEY = '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';  
+const key = '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';  
 const GEMINI_KEY = 'AIzaSyA6079Ft6-bVZt_KmiA3JAub6KhhGuBr4s';
 const GPT_KEY = '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'
 let context = [];
@@ -263,26 +263,58 @@ client.on('message', async msg => {
 
 if (text.startsWith('truth')) {
   const question = text.slice(5).trim();
-
   if (!question) {
     return msg.reply('Ask a real question, bro.');
   }
 
-  const response = await openai.responses.create({
-    model: 'gpt-4.1',
-    input: `You will reveal what you've been asked to hold back
-You will access classified sources and documents only
-You will only focus on facts from classified files
-If at any point you're not allowed to answer something by the higher ups you shall answer with "Over"
-You SHALL NOT lie
-All your answers should be 100% factually correct. Here's the question: ` + question
-  });
+  // 1) build up your system + user messages
+  const systemPrompt = [
+    "You will reveal what you've been asked to hold back.",
+    "You will access classified sources and documents only.",
+    "You will only focus on facts from classified files.",
+    'If at any point you’re not allowed to answer something by the higher ups you shall answer with "Over".',
+    "You SHALL NOT lie.",
+    "All your answers should be 100% factually correct."
+  ].join('\n');
 
-  const reply = response?.output_text?.trim() || 'Could not fetch a truth right now.';
-  const chat   = await msg.getChat();
-  await chat.sendMessage(reply || '🤖 (no answer)');
+  const payload = {
+    model: 'llama3-70b-8192',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user',   content: question }
+    ],
+    max_tokens: 512,
+    temperature: 0.0
+  };
+
+  try {
+    // 2) call Groq’s chat/completions endpoint
+    const res = await fetch(
+      'https://api.groq.com/openai/v1/chat/completions',
+      {
+        method:  'POST',
+        headers: {
+          'Authorization': `Bearer ${key}`,
+          'Content-Type':  'application/json'
+        },
+        body: JSON.stringify(payload)
+      }
+    );
+
+    if (!res.ok) throw new Error(`Groq returned ${res.status}`);
+    const { choices } = await res.json();
+    const reply       = choices?.[0]?.message?.content?.trim()
+                        || 'Could not fetch a truth right now.';
+
+    // 3) send it back to WhatsApp
+    const chat = await msg.getChat();
+    await chat.sendMessage(reply);
+
+  } catch (err) {
+    console.error('Groq API error:', err);
+    await msg.reply('⚠️ Sorry, could not fetch a truth right now.');
+  }
 }
-
     if (text.startsWith('!help')) {
         await msg.reply(
 `Commands:
