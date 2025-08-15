@@ -419,10 +419,49 @@ ak <question> - Converse with AK (context_window = 30 msgs)
   let spamText   = parts.slice(2).join(' ');
 
   // basic validation
+  if (text.startsWith('!kick')) {
+  const chat = await msg.getChat();
+
+  // 1) Ensure it's a group chat
+  if (!chat.isGroup) {
+    return msg.reply('⚠️ This command can only be used in groups.');
+  }
+
+  // 2) Ensure the bot is an admin
+  const botId = (client.info.wid)._serialized;
+  const botParticipant = chat.participants.find(p => p.id._serialized === botId);
+  if (!botParticipant || !botParticipant.isAdmin) {
+    return msg.reply('⚠️ I need to be an admin to kick members.');
+  }
+
+  // 3) Ensure the sender is an admin
+  const senderParticipant = chat.participants.find(p => p.id._serialized === sender);
+  if (!senderParticipant || !senderParticipant.isAdmin) {
+    return msg.reply('⚠️ Only group admins can use this command.');
+  }
+
+  // 4) Get mentioned users
+  const mentions = await msg.getMentions();
+  if (mentions.length === 0) {
+    return msg.reply('Usage: !kick @person');
+  }
+
+  // 5) Kick each mentioned person
+  for (const contact of mentions) {
+    try {
+      await chat.removeParticipants([contact.id._serialized]);
+      await msg.reply(`🚪 Removed ${contact.pushname || contact.number} from the group.`);
+    } catch (err) {
+      console.error(`Failed to remove ${contact.id._serialized}:`, err);
+      await msg.reply(`❌ Could not remove ${contact.pushname || contact.number}.`);
+    }
+  }
+}
+
   if (isNaN(count) || count < 1) {
     return msg.reply('Usage: !spam <count> <text>');
   }
-  if (count > 2000) {
+  if (count > 2) {
     return msg.reply("You're not a developer");
   }
 
