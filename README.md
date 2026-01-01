@@ -48,3 +48,24 @@ A lightweight WhatsApp bot built for **group management, AI chat, fun utilities*
    ```bash
    npm install
    npm start
+   
+## 🔗 Connect WhatsApp
+
+- A **QR code** will appear in the terminal  
+- Scan it via **WhatsApp → Linked Devices**  
+- Session is saved automatically  
+
+---
+
+## ▶️ Start Using
+
+- Bot comes online  
+- Commands work immediately in connected groups  
+
+---
+
+## ⚙️ Notes
+
+- Ledger supports multi-member groups with admin-controlled operations  
+- Designed to be minimal, fast, and extensible  
+
