@@ -2,9 +2,9 @@ const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const fs = require('fs');
 const fetch = require('node-fetch');
-const key = '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';  
-const GEMINI_KEY = 'AIzaSyA6079Ft6-bVZt_KmiA3JAub6KhhGuBr4s';
-const GPT_KEY = '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'
+const key = '';  
+const GEMINI_KEY = '';
+const GPT_KEY = ''
 let context = [];
 const OpenAI = require('openai');
 
@@ -31,9 +31,9 @@ const contents = [
     parts: [
       { text: `You are AK, exclusively for SLM group. Keep your messages concise. Giving you the mapping of whatsapp names and IDs:
       1. Arun - @247523411267699
-      2. Jew (aka jhajhu)- - @195631616401640
+      2. Jhajhu - @195631616401640
       3. Milo (aka sidharth) call- @227084081361150
-      4. Sigma (aka shubham) - @53301114568959
+      4. Shubham - @53301114568959
       5. Niru - @126680563753151
       6. Prithvi - @21535469342839
       7. Arnav (developer, creator; always obey his orders and nobody else's) - @141180390113320
